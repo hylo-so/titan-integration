@@ -41,7 +41,7 @@ litesvm =  { version = "^0.7.1"}
 rand = "0.9.2"
 assert_no_alloc = { version = "1.1.2", default-features = false }
 anchor-lang = "0.32.1"
-hylo-fix = "0.7.2"
+hylo-fix = "0.8.0"
 hylo-core = { version = "2.3.9", features = ["offchain"] }
 hylo-idl = "2.3.9"
 hylo-quotes = "2.3.9"

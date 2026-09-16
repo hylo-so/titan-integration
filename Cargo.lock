@@ -2171,7 +2171,7 @@ dependencies = [
  "base64 0.22.1",
  "bincode",
  "hylo-core",
- "hylo-fix",
+ "hylo-fix 0.7.2",
  "hylo-idl",
  "hylo-squads-multisig",
  "itertools 0.14.0",
@@ -2194,7 +2194,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "const-crypto",
- "hylo-fix",
+ "hylo-fix 0.7.2",
  "hylo-idl",
  "hylo-jupiter-amm-interface",
  "itertools 0.14.0",
@@ -2220,6 +2220,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "hylo-fix"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4026a27a20485d36c85099fcd47d63c3d3b1c2b884631d6ec174fa30bfa810cb"
+dependencies = [
+ "anchor-lang",
+ "anyhow",
+ "muldiv",
+ "num-traits",
+ "paste",
+ "serde",
+ "typenum",
+]
+
+[[package]]
 name = "hylo-idl"
 version = "2.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2229,7 +2244,7 @@ dependencies = [
  "anchor-spl",
  "anyhow",
  "const-crypto",
- "hylo-fix",
+ "hylo-fix 0.7.2",
  "mpl-token-metadata",
  "solana-address-lookup-table-interface",
  "solana-loader-v3-interface 5.0.0",
@@ -2264,7 +2279,7 @@ dependencies = [
  "bincode",
  "hylo-clients",
  "hylo-core",
- "hylo-fix",
+ "hylo-fix 0.7.2",
  "hylo-idl",
  "pyth-solana-receiver-sdk",
  "serde",
@@ -2353,7 +2368,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tokio",
  "tower-service",
  "tracing",
@@ -3462,7 +3477,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.41",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -3502,7 +3517,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tracing",
  "windows-sys 0.61.2",
 ]
@@ -7760,7 +7775,7 @@ dependencies = [
  "dashmap 6.2.1",
  "env_logger 0.11.11",
  "hylo-core",
- "hylo-fix",
+ "hylo-fix 0.8.0",
  "hylo-idl",
  "hylo-quotes",
  "litesvm",
