@@ -52,3 +52,9 @@ hylo-quotes = "2.3.9"
 inherits = "release"
 debug-assertions = true
 overflow-checks = false
+
+[patch.crates-io]
+hylo-clients = { path = "../sdk/hylo-clients" }
+hylo-core = { path = "../sdk/hylo-core" }
+hylo-idl = { path = "../sdk/hylo-idl" }
+hylo-quotes = { path = "../sdk/hylo-quotes" }
