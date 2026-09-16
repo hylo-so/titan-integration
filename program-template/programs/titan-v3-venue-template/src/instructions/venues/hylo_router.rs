@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
+use hylo_idl::pda;
 use hylo_idl::router::client::args::Route;
 use hylo_idl::router::instruction_builders::route;
 
@@ -16,5 +17,9 @@ pub fn swap(
     amount: amount_in,
     slippage_config: None,
   };
-  Ok(vec![route(&args, &account_metas.to_vec())])
+  let accounts =
+    std::iter::once(AccountMeta::new_readonly(pda::EXO_REGISTRY, false))
+      .chain(account_metas.iter().cloned())
+      .collect::<Vec<_>>();
+  Ok(vec![route(&args, &accounts)])
 }

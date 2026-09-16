@@ -9,6 +9,7 @@ shadow = ["hylo-core/shadow", "hylo-idl/shadow", "hylo-quotes/shadow"]
 
 [dependencies]
 borsh = { version = "1.5.7", features = ["derive"] }
+bytemuck = "1.25.2"
 solana-client = "2.2.1"
 solana-rpc-client = "2.2.1"
 solana-pubkey = "2.2.1"

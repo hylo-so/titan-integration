@@ -7750,6 +7750,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "borsh 1.7.0",
+ "bytemuck",
  "dashmap 6.2.1",
  "env_logger 0.11.11",
  "hylo-core",
