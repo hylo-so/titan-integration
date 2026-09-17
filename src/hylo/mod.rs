@@ -331,31 +331,41 @@ impl TradingVenue for HyloRouter {
     // The first registry refresh discovers pair accounts.  The next one reads
     // each ExoPair and discovers its Pyth feed; only then can a pair be fully
     // quoted.  This avoids assuming any feed address from a pre-seeded mint.
-    let mut dynamic_mints = Vec::new();
-    let mut discovered_oracles = Vec::new();
-    for ([collateral, levercoin], accounts) in
-      requested_exo_pairs.iter().zip(dynamic.chunks_exact(4))
-    {
-      let [exo_pair, vault, levercoin_mint, collateral_mint] = accounts else {
-        continue;
-      };
-      let (
-        Some(exo_pair),
-        Some(_vault),
-        Some(levercoin_mint),
-        Some(collateral_mint),
-      ) = (exo_pair, vault, levercoin_mint, collateral_mint)
-      else {
-        continue;
-      };
-      let pair = ExoPair::try_deserialize(&mut exo_pair.data.as_slice())
-        .map_err(|error| {
-          TradingVenueError::DeserializationFailed(error_chain(error))
-        })?;
-      discovered_oracles.push([*collateral, pair.oracle]);
-      dynamic_mints.push((*collateral, collateral_mint));
-      dynamic_mints.push((*levercoin, levercoin_mint));
-    }
+    let discovered = requested_exo_pairs
+      .iter()
+      .zip(dynamic.chunks_exact(4))
+      .filter_map(|([collateral, levercoin], accounts)| match accounts {
+        [
+          Some(exo_pair),
+          Some(_vault),
+          Some(levercoin_mint),
+          Some(collateral_mint),
+        ] => Some((
+          collateral,
+          levercoin,
+          exo_pair,
+          levercoin_mint,
+          collateral_mint,
+        )),
+        _ => None,
+      })
+      .map(
+        |(collateral, levercoin, exo_pair, levercoin_mint, collateral_mint)| {
+          let pair = ExoPair::try_deserialize(&mut exo_pair.data.as_slice())
+            .map_err(|error| {
+              TradingVenueError::DeserializationFailed(error_chain(error))
+            })?;
+          Ok((
+            [*collateral, pair.oracle],
+            [(*collateral, collateral_mint), (*levercoin, levercoin_mint)],
+          ))
+        },
+      )
+      .collect::<Result<Vec<_>, TradingVenueError>>()?;
+    let (discovered_oracles, dynamic_mint_groups): (Vec<_>, Vec<_>) =
+      discovered.into_iter().unzip();
+    let dynamic_mints: Vec<_> =
+      dynamic_mint_groups.into_iter().flatten().collect();
     self.exo_oracles = discovered_oracles;
 
     // Update state only if all exo pairs and oracles are discovered
