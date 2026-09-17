@@ -70,7 +70,7 @@ pub fn parse_pool_creations(
       let is_registration = instruction.program_id == router::ID
         && instruction
           .data
-          .starts_with(router::client::args::RegisterExo::DISCRIMINATOR);
+          .starts_with(router::client::args::RegisterExoEntry::DISCRIMINATOR);
       is_registration
         .then(|| {
           let collateral_mint = *instruction.accounts.get(3)?;
@@ -305,7 +305,7 @@ impl TradingVenue for HyloRouter {
       bytemuck::try_pod_read_unaligned(registry_data).map_err(|error| {
         TradingVenueError::DeserializationFailed(error.to_string().into())
       })?;
-    let exo_len = usize::from(registry.len);
+    let exo_len = usize::from(registry.current_size);
     let registry_entries = registry.entries.get(..exo_len).ok_or(
       TradingVenueError::DeserializationFailed(
         "EXO registry length exceeds capacity".into(),
