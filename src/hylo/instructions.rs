@@ -40,37 +40,37 @@ pub fn swap_instruction(
       let oracle = exo_oracles
         .iter()
         .find_map(|[mint, oracle]| (*mint == *collateral).then_some(*oracle))?;
-      let accounts = match (input_mint, output_mint) {
-        (mint, HYUSD::MINT) if mint == *collateral => {
-          mint_stablecoin_exo(user, *collateral, oracle).to_account_metas(None)
-        }
-        (HYUSD::MINT, mint) if mint == *collateral => {
+      match (input_mint, output_mint) {
+        (mint, HYUSD::MINT) if mint == *collateral => Some(
+          mint_stablecoin_exo(user, *collateral, oracle).to_account_metas(None),
+        ),
+        (HYUSD::MINT, mint) if mint == *collateral => Some(
           redeem_stablecoin_exo(user, *collateral, oracle)
-            .to_account_metas(None)
-        }
-        (mint, out) if mint == *collateral && out == *levercoin => {
-          mint_levercoin_exo(user, *collateral, oracle).to_account_metas(None)
-        }
-        (mint, out) if mint == *levercoin && out == *collateral => {
-          redeem_levercoin_exo(user, *collateral, oracle).to_account_metas(None)
-        }
-        (HYUSD::MINT, mint) if mint == *levercoin => {
+            .to_account_metas(None),
+        ),
+        (mint, out) if mint == *collateral && out == *levercoin => Some(
+          mint_levercoin_exo(user, *collateral, oracle).to_account_metas(None),
+        ),
+        (mint, out) if mint == *levercoin && out == *collateral => Some(
+          redeem_levercoin_exo(user, *collateral, oracle)
+            .to_account_metas(None),
+        ),
+        (HYUSD::MINT, mint) if mint == *levercoin => Some(
           convert_stable_to_lever_exo(user, *collateral, oracle)
-            .to_account_metas(None)
-        }
-        (mint, HYUSD::MINT) if mint == *levercoin => {
+            .to_account_metas(None),
+        ),
+        (mint, HYUSD::MINT) if mint == *levercoin => Some(
           convert_lever_to_stable_exo(user, *collateral, oracle)
-            .to_account_metas(None)
-        }
-        (mint, USDC::MINT) if mint == *collateral => {
-          swap_exo_to_usdc(user, *collateral, oracle).to_account_metas(None)
-        }
-        (USDC::MINT, mint) if mint == *collateral => {
-          swap_usdc_to_exo(user, *collateral, oracle).to_account_metas(None)
-        }
-        _ => return None,
-      };
-      Some(accounts)
+            .to_account_metas(None),
+        ),
+        (mint, USDC::MINT) if mint == *collateral => Some(
+          swap_exo_to_usdc(user, *collateral, oracle).to_account_metas(None),
+        ),
+        (USDC::MINT, mint) if mint == *collateral => Some(
+          swap_usdc_to_exo(user, *collateral, oracle).to_account_metas(None),
+        ),
+        _ => None,
+      }
     });
   let accounts =
     registered_exo_accounts.unwrap_or(match (input_mint, output_mint) {

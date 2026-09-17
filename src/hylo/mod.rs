@@ -357,44 +357,49 @@ impl TradingVenue for HyloRouter {
       dynamic_mints.push((*levercoin, levercoin_mint));
     }
     self.exo_oracles = discovered_oracles;
-    if requested_exo_pairs.len() != registry_entries.len()
-      || oracle_accounts.len() != registry_entries.len()
-    {
-      return Ok(());
-    }
-    let protocol_with_exo = protocol
-      .iter()
-      .cloned()
-      .chain(dynamic.iter().cloned())
-      .chain(oracle_accounts.iter().cloned())
-      .collect::<Vec<_>>();
-    let protocol_accounts = ProtocolAccounts::from_fetched(&protocol_with_exo)
-      .map_err(|e| TradingVenueError::NoAccountFound(error_chain(e)))?;
-    let clock: Clock = bincode::deserialize(&protocol_accounts.clock.data)
-      .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?;
-    let epoch = clock.epoch;
-    let protocol_state = ProtocolState::try_from(&protocol_accounts)
-      .map_err(|e| TradingVenueError::MissingState(error_chain(e)))?;
 
-    // Update state
-    self.protocol_state = Some(protocol_state);
-    self.token_info = vec![
-      TokenInfo::new(&JITOSOL::MINT, jitosol, epoch)?,
-      TokenInfo::new(&HYLOSOL::MINT, hylosol, epoch)?,
-      TokenInfo::new(&HYUSD::MINT, &protocol_accounts.hyusd_mint, epoch)?,
-      TokenInfo::new(&XSOL::MINT, &protocol_accounts.xsol_mint, epoch)?,
-      TokenInfo::new(&SHYUSD::MINT, &protocol_accounts.shyusd_mint, epoch)?,
-      TokenInfo::new(&USDC::MINT, usdc, epoch)?,
-    ];
-    self.token_info.extend(
-      dynamic_mints
-        .into_iter()
-        .map(|(mint, account)| TokenInfo::new(&mint, account, epoch))
-        .collect::<Result<Vec<_>, _>>()?,
-    );
-    self.token_info.sort_unstable_by_key(|info| info.pubkey);
-    self.token_info.dedup_by_key(|info| info.pubkey);
-    self.initialized = true;
+    // Update state only if all exo pairs and oracles are discovered
+    if requested_exo_pairs.len() == registry_entries.len()
+      && oracle_accounts.len() == registry_entries.len()
+    {
+      let protocol_with_exo = protocol
+        .iter()
+        .cloned()
+        .chain(dynamic.iter().cloned())
+        .chain(oracle_accounts.iter().cloned())
+        .collect::<Vec<_>>();
+      let protocol_accounts =
+        ProtocolAccounts::from_fetched(&protocol_with_exo)
+          .map_err(|e| TradingVenueError::NoAccountFound(error_chain(e)))?;
+      let clock: Clock = bincode::deserialize(&protocol_accounts.clock.data)
+        .map_err(|e| {
+          TradingVenueError::DeserializationFailed(error_chain(e))
+        })?;
+      let epoch = clock.epoch;
+      let protocol_state = ProtocolState::try_from(&protocol_accounts)
+        .map_err(|e| TradingVenueError::MissingState(error_chain(e)))?;
+
+      // Update state
+      self.protocol_state = Some(protocol_state);
+      self.token_info = vec![
+        TokenInfo::new(&JITOSOL::MINT, jitosol, epoch)?,
+        TokenInfo::new(&HYLOSOL::MINT, hylosol, epoch)?,
+        TokenInfo::new(&HYUSD::MINT, &protocol_accounts.hyusd_mint, epoch)?,
+        TokenInfo::new(&XSOL::MINT, &protocol_accounts.xsol_mint, epoch)?,
+        TokenInfo::new(&SHYUSD::MINT, &protocol_accounts.shyusd_mint, epoch)?,
+        TokenInfo::new(&USDC::MINT, usdc, epoch)?,
+      ];
+      self.token_info.extend(
+        dynamic_mints
+          .into_iter()
+          .map(|(mint, account)| TokenInfo::new(&mint, account, epoch))
+          .collect::<Result<Vec<_>, _>>()?,
+      );
+      self.token_info.sort_unstable_by_key(|info| info.pubkey);
+      self.token_info.dedup_by_key(|info| info.pubkey);
+      self.initialized = true;
+    }
+
     Ok(())
   }
 
