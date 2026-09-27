@@ -1,4 +1,5 @@
 use fix::prelude::UFix64;
+use hylo_idl::router::types::ExoEntry;
 use hylo_idl::tokens::{
   HYLOSOL, HYUSD, JITOSOL, SHYUSD, TokenMint, USDC, XSOL,
 };
@@ -47,8 +48,10 @@ fn registered_exo_quote(
     })
     .ok_or(TradingVenueError::InvalidMint(input_mint.into()))?;
   match state.runtime_exo_quote(
-    *collateral,
-    *levercoin,
+    &ExoEntry {
+        collateral_mint: *collateral,
+        levercoin_mint: *levercoin,
+    },
     input_mint,
     output_mint,
     amount,
