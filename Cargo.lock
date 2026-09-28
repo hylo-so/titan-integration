@@ -934,9 +934,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.25.0"
+version = "1.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec"
+checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
 dependencies = [
  "bytemuck_derive",
 ]
@@ -2159,9 +2159,7 @@ dependencies = [
 
 [[package]]
 name = "hylo-clients"
-version = "2.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89db67a9d29d38c8b0bbf3b96ab20e1631684c513ae84cff1164caa4c4be193f"
+version = "2.7.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2187,9 +2185,7 @@ dependencies = [
 
 [[package]]
 name = "hylo-core"
-version = "2.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6933e1f8712eedcb594e9fe32031290e8436aa6aef6788cdff4a20bcc62fb0ac"
+version = "2.7.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2204,16 +2200,15 @@ dependencies = [
 
 [[package]]
 name = "hylo-fix"
-version = "0.7.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef27049ab1246df4990a9e2ed6aa932981331e68935307e6f8e91ae8ba2cacc2"
+checksum = "4026a27a20485d36c85099fcd47d63c3d3b1c2b884631d6ec174fa30bfa810cb"
 dependencies = [
  "anchor-lang",
  "anyhow",
  "muldiv",
  "num-traits",
  "paste",
- "quote",
  "serde",
  "typed_floats",
  "typenum",
@@ -2221,13 +2216,12 @@ dependencies = [
 
 [[package]]
 name = "hylo-idl"
-version = "2.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3adc4834d572b7e5fa436117d32b5c1fd0aaac232e89ccfd97d581ad90f8456c"
+version = "2.7.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "anyhow",
+ "bytemuck",
  "const-crypto",
  "hylo-fix",
  "mpl-token-metadata",
@@ -2252,9 +2246,7 @@ dependencies = [
 
 [[package]]
 name = "hylo-quotes"
-version = "2.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02b8bc5cc85a301758778fc7355956476e40eeb708152fa15d842fcf71e1671c"
+version = "2.7.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2262,6 +2254,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bincode",
+ "bytemuck",
  "hylo-clients",
  "hylo-core",
  "hylo-fix",
@@ -7757,6 +7750,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "borsh 1.7.0",
+ "bytemuck",
  "dashmap 6.2.1",
  "env_logger 0.11.11",
  "hylo-core",

@@ -94,7 +94,6 @@ fn config_invalid(error: CoreError) -> bool {
     error,
     InvalidFees
       | YieldHarvestConfigValidation
-      | YieldHarvestAllocation
       | OracleIntervalSecsInvalid
       | OracleConfToleranceInvalid
       | StablecoinMintThresholdInvalid
@@ -121,7 +120,6 @@ fn math_failed(error: CoreError) -> bool {
       | LstSolPriceConversion
       | SolLstPriceConversion
       | LstLstPriceConversion
-      | CollateralRatio
       | MaxMintable
       | MaxSwappable
       | StablecoinNav

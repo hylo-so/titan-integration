@@ -2,6 +2,11 @@
 members = ["programs/*"]
 resolver = "2"
 
+[patch.crates-io]
+hylo-core = { path = "../../sdk/hylo-core" }
+hylo-idl = { path = "../../sdk/hylo-idl" }
+hylo-quotes = { path = "../../sdk/hylo-quotes" }
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

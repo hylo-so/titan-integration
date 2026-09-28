@@ -31,6 +31,10 @@ use crate::account_caching::{AccountCacheError, AccountsCache};
 /// Using `Option<Account>` avoids retrying missing accounts on every request.
 type AccountCache = DashMap<Pubkey, Option<Account>>;
 
+fn cacheable_account(pubkey: &Pubkey) -> bool {
+  *pubkey != solana_program::sysvar::clock::ID
+}
+
 /// A caching layer around a Solana RPC client.
 ///
 /// The cache performs the following optimizations:
@@ -70,7 +74,9 @@ impl RpcClientCache {
   pub fn get_multiple(&self, pubkeys: &[Pubkey]) -> Vec<Option<Account>> {
     let mut result = Vec::with_capacity(pubkeys.len());
     pubkeys.iter().for_each(|key| {
-      if let Some(value) = self.cache.get(key) {
+      if cacheable_account(key)
+        && let Some(value) = self.cache.get(key)
+      {
         result.push(value.clone());
       } else {
         result.push(None);
@@ -93,7 +99,9 @@ impl AccountsCache for RpcClientCache {
     &self,
     pubkey: &Pubkey,
   ) -> Result<Option<Account>, AccountCacheError> {
-    if let Some(account) = self.cache.get(pubkey) {
+    if cacheable_account(pubkey)
+      && let Some(account) = self.cache.get(pubkey)
+    {
       return Ok(account.to_owned());
     }
 
@@ -104,7 +112,9 @@ impl AccountsCache for RpcClientCache {
       .map_err(AccountCacheError::FailedToFetchAccount)?;
 
     // Cache positive lookup
-    self.cache.insert(*pubkey, Some(response.clone()));
+    if cacheable_account(pubkey) {
+      self.cache.insert(*pubkey, Some(response.clone()));
+    }
 
     Ok(Some(response))
   }
@@ -130,7 +140,9 @@ impl AccountsCache for RpcClientCache {
       .iter()
       .zip(pubkeys.iter())
       .for_each(|(account, pubkey)| {
-        if let Some(res) = account {
+        if cacheable_account(pubkey)
+          && let Some(res) = account
+        {
           // Cached hit
           result_map.insert(*pubkey, Some(res.clone()));
         } else {
@@ -150,7 +162,9 @@ impl AccountsCache for RpcClientCache {
       // Update map and cache
       for (pubkey, account) in keys.iter().zip(response.iter()) {
         result_map.insert(*pubkey, account.clone());
-        self.cache.insert(*pubkey, account.clone());
+        if cacheable_account(pubkey) {
+          self.cache.insert(*pubkey, account.clone());
+        }
       }
     }
 
