@@ -9,18 +9,18 @@ use hylo_idl::exchange::account_builders::{
   swap_exo_to_usdc, swap_lst_to_lst, swap_lst_to_usdc, swap_usdc_to_exo,
   swap_usdc_to_lst,
 };
-use hylo_idl::router::client::args::Route;
-use hylo_idl::router::instruction_builders::route;
+use hylo_idl::router::client::args::RouteV2;
+use hylo_idl::router::instruction_builders::route_v2;
 use hylo_idl::tokens::{
   HYLOSOL, HYUSD, JITOSOL, SHYUSD, StakePool, TokenMint, USDC, XSOL,
 };
-use solana_instruction::{AccountMeta, Instruction};
+use solana_instruction::Instruction;
 use solana_pubkey::Pubkey;
 
 use crate::trading_venue::QuoteRequest;
 use crate::trading_venue::error::TradingVenueError;
 
-/// Builds the `hylo-router` `route` instruction for a swap direction,
+/// Builds the `hylo-router` `route_v2` instruction for a swap direction,
 /// erroring on an unroutable pair. One arm per routable pair, mirroring
 /// `hylo-router`'s `resolve_route`.
 #[allow(clippy::too_many_lines)]
@@ -126,17 +126,11 @@ pub fn swap_instruction(
       (SHYUSD::MINT, HYUSD::MINT) => withdraw(user).to_account_metas(None),
       _ => Err(TradingVenueError::InvalidMint(input_mint.into()))?,
     });
-  let args = Route {
+  let args = RouteV2 {
     token_a: input_mint,
     token_b: output_mint,
     amount,
     slippage_config: None,
   };
-  let accounts = std::iter::once(AccountMeta::new_readonly(
-    hylo_idl::pda::EXO_REGISTRY,
-    false,
-  ))
-  .chain(accounts)
-  .collect::<Vec<_>>();
-  Ok(route(&args, &accounts))
+  Ok(route_v2(&args, &accounts))
 }
