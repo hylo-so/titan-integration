@@ -49,8 +49,8 @@ fn registered_exo_quote(
     .ok_or(TradingVenueError::InvalidMint(input_mint.into()))?;
   match state.runtime_exo_quote(
     &ExoEntry {
-        collateral_mint: *collateral,
-        levercoin_mint: *levercoin,
+      collateral_mint: *collateral,
+      levercoin_mint: *levercoin,
     },
     input_mint,
     output_mint,
