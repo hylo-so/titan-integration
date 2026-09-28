@@ -124,6 +124,22 @@ impl<'a> ExternalMints<'a> {
   }
 }
 
+fn exo_accounts_in_fetch_order(
+  dynamic: &[Option<Account>],
+  oracle_accounts: &[Option<Account>],
+) -> Vec<Option<Account>> {
+  dynamic
+    .chunks_exact(4)
+    .zip(oracle_accounts.iter())
+    .flat_map(|(pair_accounts, oracle)| {
+      pair_accounts
+        .iter()
+        .cloned()
+        .chain(std::iter::once(oracle.clone()))
+    })
+    .collect()
+}
+
 /// Hylo V2 exchange venue state.
 pub struct HyloRouter {
   pub pool_id: Pubkey,
@@ -375,8 +391,7 @@ impl TradingVenue for HyloRouter {
       let protocol_with_exo = protocol
         .iter()
         .cloned()
-        .chain(dynamic.iter().cloned())
-        .chain(oracle_accounts.iter().cloned())
+        .chain(exo_accounts_in_fetch_order(dynamic, oracle_accounts))
         .collect::<Vec<_>>();
       let protocol_accounts =
         ProtocolAccounts::from_fetched(&protocol_with_exo)
@@ -467,5 +482,51 @@ impl TradingVenue for HyloRouter {
       &self.exo_pairs,
       &self.exo_oracles,
     )
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn exo_accounts_interleave_oracles_per_registry_entry() {
+    let dynamic = (1..=8)
+      .map(|lamports| {
+        Some(Account {
+          lamports,
+          ..Account::default()
+        })
+      })
+      .collect::<Vec<_>>();
+    let oracles = (9..=10)
+      .map(|lamports| {
+        Some(Account {
+          lamports,
+          ..Account::default()
+        })
+      })
+      .collect::<Vec<_>>();
+
+    let lamports = exo_accounts_in_fetch_order(&dynamic, &oracles)
+      .iter()
+      .map(|account| account.as_ref().map(|account| account.lamports))
+      .collect::<Vec<_>>();
+
+    assert_eq!(
+      lamports,
+      vec![
+        Some(1),
+        Some(2),
+        Some(3),
+        Some(4),
+        Some(9),
+        Some(5),
+        Some(6),
+        Some(7),
+        Some(8),
+        Some(10)
+      ]
+    );
   }
 }
