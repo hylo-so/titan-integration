@@ -344,9 +344,7 @@ impl TradingVenue for HyloRouter {
       usdc,
     } = ExternalMints::from_fetched(external)?;
 
-    // The first registry refresh discovers pair accounts.  The next one reads
-    // each ExoPair and discovers its Pyth feed; only then can a pair be fully
-    // quoted.  This avoids assuming any feed address from a pre-seeded mint.
+    // Read each registered pair to discover its Pyth feed.
     let discovered = requested_exo_pairs
       .iter()
       .zip(dynamic.chunks_exact(4))
@@ -384,7 +382,7 @@ impl TradingVenue for HyloRouter {
       dynamic_mint_groups.into_iter().flatten().collect();
     self.exo_oracles = discovered_oracles;
 
-    // Update state only if all exo pairs and oracles are discovered
+    // Update state after every registered pair and oracle is available.
     if requested_exo_pairs.len() == registry_entries.len()
       && oracle_accounts.len() == registry_entries.len()
     {
@@ -423,9 +421,10 @@ impl TradingVenue for HyloRouter {
       self.token_info.sort_unstable_by_key(|info| info.pubkey);
       self.token_info.dedup_by_key(|info| info.pubkey);
       self.initialized = true;
+      Ok(())
+    } else {
+      Box::pin(self.update_state(cache)).await
     }
-
-    Ok(())
   }
 
   fn quote(
