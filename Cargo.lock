@@ -2160,6 +2160,7 @@ dependencies = [
 [[package]]
 name = "hylo-clients"
 version = "2.7.0"
+source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2186,6 +2187,7 @@ dependencies = [
 [[package]]
 name = "hylo-core"
 version = "2.7.0"
+source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2217,6 +2219,7 @@ dependencies = [
 [[package]]
 name = "hylo-idl"
 version = "2.7.0"
+source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2247,6 +2250,7 @@ dependencies = [
 [[package]]
 name = "hylo-quotes"
 version = "2.7.0"
+source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2346,7 +2350,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tokio",
  "tower-service",
  "tracing",
@@ -3455,7 +3459,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.41",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -3495,7 +3499,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tracing",
  "windows-sys 0.61.2",
 ]

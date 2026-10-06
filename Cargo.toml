@@ -55,7 +55,7 @@ debug-assertions = true
 overflow-checks = false
 
 [patch.crates-io]
-hylo-clients = { path = "../sdk/hylo-clients" }
-hylo-core = { path = "../sdk/hylo-core" }
-hylo-idl = { path = "../sdk/hylo-idl" }
-hylo-quotes = { path = "../sdk/hylo-quotes" }
+hylo-clients = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
+hylo-core = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
+hylo-idl = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
+hylo-quotes = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
