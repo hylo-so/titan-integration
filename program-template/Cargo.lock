@@ -2314,6 +2314,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "hylo-titan-integration"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anchor-lang",
+ "assert_no_alloc",
+ "async-trait",
+ "bincode",
+ "borsh 1.7.0",
+ "dashmap 6.2.1",
+ "env_logger 0.11.11",
+ "hylo-core",
+ "hylo-fix",
+ "hylo-idl",
+ "hylo-quotes",
+ "litesvm",
+ "log",
+ "rand 0.9.5",
+ "solana-account",
+ "solana-account-info",
+ "solana-client",
+ "solana-compute-budget",
+ "solana-hash",
+ "solana-instruction",
+ "solana-instructions-sysvar",
+ "solana-program",
+ "solana-program-option",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rpc-client",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "solana-sysvar",
+ "solana-transaction",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 7.0.0",
+ "spl-token-2022 9.0.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-retry",
+]
+
+[[package]]
 name = "hyper"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7770,49 +7813,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
-name = "titan-integration-template"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anchor-lang",
- "assert_no_alloc",
- "async-trait",
- "bincode",
- "borsh 1.7.0",
- "dashmap 6.2.1",
- "env_logger 0.11.11",
- "hylo-core",
- "hylo-fix",
- "hylo-idl",
- "hylo-quotes",
- "litesvm",
- "log",
- "rand 0.9.5",
- "solana-account",
- "solana-account-info",
- "solana-client",
- "solana-compute-budget",
- "solana-hash",
- "solana-instruction",
- "solana-instructions-sysvar",
- "solana-program",
- "solana-program-option",
- "solana-program-pack",
- "solana-pubkey",
- "solana-rpc-client",
- "solana-sdk",
- "solana-sdk-ids",
- "solana-sysvar",
- "solana-transaction",
- "spl-associated-token-account 6.0.0",
- "spl-token 7.0.0",
- "spl-token-2022 9.0.0",
- "thiserror 1.0.69",
- "tokio",
- "tokio-retry",
-]
-
-[[package]]
 name = "titan-v3-venue-template"
 version = "0.1.0"
 dependencies = [
@@ -7821,6 +7821,7 @@ dependencies = [
  "borsh 0.10.4",
  "env_logger 0.11.11",
  "hylo-idl",
+ "hylo-titan-integration",
  "litesvm",
  "log",
  "solana-account",
@@ -7836,7 +7837,6 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 7.0.0",
  "spl-token-2022 9.0.0",
- "titan-integration-template",
  "tokio",
  "tokio-retry",
 ]
