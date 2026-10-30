@@ -143,6 +143,89 @@ impl<'a> ExternalMints<'a> {
   }
 }
 
+/// Splits a fetch into the SDK protocol accounts, including the exo
+/// accounts of `entry_count` registry entries, and the trailing external
+/// mints.
+fn split_fetched(
+  accounts: &[Option<Account>],
+  entry_count: usize,
+) -> Result<(&[Option<Account>], &[Option<Account>]), TradingVenueError> {
+  let protocol_len =
+    ProtocolAccounts::PUBKEYS.len() + entry_count * EXO_PAIR_ACCOUNTS;
+  accounts
+    .split_at_checked(protocol_len)
+    .ok_or(TradingVenueError::FailedToFetchMultipleAccountData)
+}
+
+/// Registry entries from the exo registry account, the last of
+/// [`ProtocolAccounts::PUBKEYS`].
+fn registry_entries(
+  protocol: &[Option<Account>],
+) -> Result<Vec<ExoEntry>, TradingVenueError> {
+  let registry = protocol
+    .get(ProtocolAccounts::PUBKEYS.len() - 1)
+    .and_then(Option::as_ref)
+    .ok_or(TradingVenueError::NoAccountFound(pda::EXO_REGISTRY.into()))?;
+  read_exo_entries(&registry.data)
+    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))
+}
+
+/// Token info for the enshrined mints and every registered exo mint, sorted
+/// by mint.
+fn token_info(
+  protocol_accounts: &ProtocolAccounts,
+  ExternalMints {
+    jitosol,
+    hylosol,
+    usdc,
+  }: ExternalMints<'_>,
+  entries: &[ExoEntry],
+  epoch: u64,
+) -> Result<Vec<TokenInfo>, TradingVenueError> {
+  let exo_mints = entries
+    .iter()
+    .zip(&protocol_accounts.exo_accounts)
+    .flat_map(|(entry, accounts)| {
+      [
+        (entry.collateral_mint, &accounts.collateral_mint),
+        (entry.levercoin_mint, &accounts.levercoin_mint),
+      ]
+    });
+  let mut token_info = [
+    (JITOSOL::MINT, jitosol),
+    (HYLOSOL::MINT, hylosol),
+    (HYUSD::MINT, &protocol_accounts.hyusd_mint),
+    (XSOL::MINT, &protocol_accounts.xsol_mint),
+    (SHYUSD::MINT, &protocol_accounts.shyusd_mint),
+    (USDC::MINT, usdc),
+  ]
+  .into_iter()
+  .chain(exo_mints)
+  .map(|(mint, account)| TokenInfo::new(&mint, account, epoch))
+  .collect::<Result<Vec<_>, _>>()?;
+  token_info.sort_unstable_by_key(|info| info.pubkey);
+  token_info.dedup_by_key(|info| info.pubkey);
+  Ok(token_info)
+}
+
+/// Protocol state and token info from one complete fetch.
+fn build_state(
+  protocol: &[Option<Account>],
+  external: &[Option<Account>],
+  entries: &[ExoEntry],
+) -> Result<(ProtocolState<Clock>, Vec<TokenInfo>), TradingVenueError> {
+  let external = ExternalMints::from_fetched(external)?;
+  let protocol_accounts = ProtocolAccounts::from_fetched(protocol)
+    .map_err(|e| TradingVenueError::NoAccountFound(error_chain(e)))?;
+  let clock: Clock = bincode::deserialize(&protocol_accounts.clock.data)
+    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?;
+  let protocol_state = ProtocolState::try_from(&protocol_accounts)
+    .map_err(|e| TradingVenueError::MissingState(error_chain(e)))?;
+  let token_info =
+    token_info(&protocol_accounts, external, entries, clock.epoch)?;
+  Ok((protocol_state, token_info))
+}
+
 /// Same registry entries in the same order.
 fn entries_match(a: &[ExoEntry], b: &[ExoEntry]) -> bool {
   a.len() == b.len()
@@ -289,76 +372,23 @@ impl TradingVenue for HyloRouter {
     &mut self,
     cache: &dyn AccountsCache,
   ) -> Result<(), TradingVenueError> {
-    // Account keys are based on the previous registry snapshot. Keep that
-    // snapshot for slicing this response; the registry may have changed while
-    // the RPC request was in flight.
+    // Keys come from the previous registry snapshot; the registry may have
+    // changed while the request was in flight.
     let requested_entries = self.exo_entries.clone();
-    // Fetch accounts
     let keys = self.get_required_pubkeys_for_update()?;
     let accounts = cache.get_accounts(&keys).await?;
-
-    // Split and validate accounts
-    let exo_account_len = requested_entries.len() * EXO_PAIR_ACCOUNTS;
-    let (protocol, external) = accounts
-      .split_at_checked(ProtocolAccounts::PUBKEYS.len() + exo_account_len)
-      .ok_or(TradingVenueError::FailedToFetchMultipleAccountData)?;
-    let registry = protocol
-      .get(ProtocolAccounts::PUBKEYS.len() - 1)
-      .and_then(Option::as_ref)
-      .ok_or(TradingVenueError::NoAccountFound(pda::EXO_REGISTRY.into()))?;
-    let entries = read_exo_entries(&registry.data)
-      .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?;
-    let registry_changed = !entries_match(&entries, &requested_entries);
-    self.exo_entries = entries;
-
-    // Update state after every registered pair is available.
-    if registry_changed {
-      Box::pin(self.update_state(cache)).await
-    } else {
-      let ExternalMints {
-        jitosol,
-        hylosol,
-        usdc,
-      } = ExternalMints::from_fetched(external)?;
-      let protocol_accounts = ProtocolAccounts::from_fetched(protocol)
-        .map_err(|e| TradingVenueError::NoAccountFound(error_chain(e)))?;
-      let clock: Clock = bincode::deserialize(&protocol_accounts.clock.data)
-        .map_err(|e| {
-          TradingVenueError::DeserializationFailed(error_chain(e))
-        })?;
-      let epoch = clock.epoch;
-      let protocol_state = ProtocolState::try_from(&protocol_accounts)
-        .map_err(|e| TradingVenueError::MissingState(error_chain(e)))?;
-      let exo_mints = self
-        .exo_entries
-        .iter()
-        .zip(&protocol_accounts.exo_accounts)
-        .flat_map(|(entry, accounts)| {
-          [
-            (entry.collateral_mint, &accounts.collateral_mint),
-            (entry.levercoin_mint, &accounts.levercoin_mint),
-          ]
-        });
-      let token_info = [
-        (JITOSOL::MINT, jitosol),
-        (HYLOSOL::MINT, hylosol),
-        (HYUSD::MINT, &protocol_accounts.hyusd_mint),
-        (XSOL::MINT, &protocol_accounts.xsol_mint),
-        (SHYUSD::MINT, &protocol_accounts.shyusd_mint),
-        (USDC::MINT, usdc),
-      ]
-      .into_iter()
-      .chain(exo_mints)
-      .map(|(mint, account)| TokenInfo::new(&mint, account, epoch))
-      .collect::<Result<Vec<_>, _>>()?;
-
-      // Update state
+    let (protocol, external) =
+      split_fetched(&accounts, requested_entries.len())?;
+    self.exo_entries = registry_entries(protocol)?;
+    if entries_match(&self.exo_entries, &requested_entries) {
+      let (protocol_state, token_info) =
+        build_state(protocol, external, &self.exo_entries)?;
       self.protocol_state = Some(protocol_state);
       self.token_info = token_info;
-      self.token_info.sort_unstable_by_key(|info| info.pubkey);
-      self.token_info.dedup_by_key(|info| info.pubkey);
       self.initialized = true;
       Ok(())
+    } else {
+      Box::pin(self.update_state(cache)).await
     }
   }
 
