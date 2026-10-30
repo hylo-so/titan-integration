@@ -1,7 +1,25 @@
 [package]
-name = "titan-integration-template"
-version = "0.1.0"
+name = "hylo-titan-integration"
+version = "0.2.0"
 edition = "2024"
+description = "Hylo V2 trading venue integration for the Titan router."
+license = "MPL-2.0"
+homepage = "https://hylo.so"
+repository = "https://github.com/hylo-so/titan-integration"
+readme = "README.md"
+exclude = [
+  ".claude/",
+  ".envrc",
+  ".github/",
+  "Makefile",
+  "flake.lock",
+  "flake.nix",
+  "program-template/",
+  "programs/",
+  "rustfmt.toml",
+  "shell-tools.nix",
+  "tests/",
+]
 
 [features]
 default = []
@@ -9,7 +27,6 @@ shadow = ["hylo-core/shadow", "hylo-idl/shadow", "hylo-quotes/shadow"]
 
 [dependencies]
 borsh = { version = "1.5.7", features = ["derive"] }
-bytemuck = "1.25.2"
 solana-client = "2.2.1"
 solana-rpc-client = "2.2.1"
 solana-pubkey = "2.2.1"
@@ -43,9 +60,9 @@ rand = "0.9.2"
 assert_no_alloc = { version = "1.1.2", default-features = false }
 anchor-lang = "0.32.1"
 hylo-fix = "0.8.0"
-hylo-core = { version = "2.3.9", features = ["offchain"] }
-hylo-idl = "2.3.9"
-hylo-quotes = "2.3.9"
+hylo-core = { version = "2.7.3", features = ["offchain"] }
+hylo-idl = "2.7.3"
+hylo-quotes = "2.7.3"
 
 # Used only for the construction allocation check. Normal tests, including
 # `quoting_speed`, run under true `--release`.
@@ -53,9 +70,3 @@ hylo-quotes = "2.3.9"
 inherits = "release"
 debug-assertions = true
 overflow-checks = false
-
-[patch.crates-io]
-hylo-clients = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
-hylo-core = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
-hylo-idl = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }
-hylo-quotes = { git = "https://github.com/hylo-so/sdk", branch = "exo-registry" }

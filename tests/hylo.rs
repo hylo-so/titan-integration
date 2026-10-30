@@ -2,9 +2,9 @@ mod common;
 
 use common::SuiteConfig;
 use hylo_idl::{earn_pool, exchange, pda, router};
+use hylo_titan_integration::hylo::HyloRouter;
 use litesvm::types::FailedTransactionMetadata;
 use solana_pubkey::Pubkey;
-use titan_integration_template::hylo::HyloRouter;
 
 // Installs the allocation guard that powers the construction test's
 // `assert_no_alloc` checks. The Makefile runs that test under `release-debug`
@@ -13,9 +13,9 @@ use titan_integration_template::hylo::HyloRouter;
 #[global_allocator]
 static A: assert_no_alloc::AllocDisabler = assert_no_alloc::AllocDisabler;
 
-/// Hylo's global state account (`pda::HYLO`) — the venue's market id.
+/// The router's exo registry (`pda::EXO_REGISTRY`) — the venue's market id.
 fn pool() -> Pubkey {
-  pda::HYLO
+  pda::EXO_REGISTRY
 }
 
 fn programs() -> Vec<Pubkey> {
