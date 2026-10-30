@@ -163,21 +163,21 @@ impl FromAccount for HyloRouter {
     pubkey: &Pubkey,
     account: &Account,
   ) -> Result<Self, TradingVenueError> {
-    let is_hylo_state = *pubkey == pda::HYLO
-      && Hylo::try_deserialize(&mut account.data.as_slice()).is_ok();
-    let is_exo_registry =
-      *pubkey == pda::EXO_REGISTRY && read_exo_entries(&account.data).is_ok();
-    if is_hylo_state || is_exo_registry {
-      Ok(HyloRouter {
-        pool_id: *pubkey,
-        protocol_state: None,
-        token_info: Vec::new(),
-        exo_entries: Vec::new(),
-        initialized: false,
-      })
-    } else {
-      Err(TradingVenueError::FromAccountError((*pubkey).into()))
+    let exo_entries = match *pubkey {
+      pda::HYLO => Hylo::try_deserialize(&mut account.data.as_slice())
+        .map(|_| Vec::new())
+        .ok(),
+      pda::EXO_REGISTRY => read_exo_entries(&account.data).ok(),
+      _ => None,
     }
+    .ok_or(TradingVenueError::FromAccountError((*pubkey).into()))?;
+    Ok(HyloRouter {
+      pool_id: *pubkey,
+      protocol_state: None,
+      token_info: Vec::new(),
+      exo_entries,
+      initialized: false,
+    })
   }
 }
 
