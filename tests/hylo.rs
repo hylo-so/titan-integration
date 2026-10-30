@@ -13,9 +13,9 @@ use titan_integration_template::hylo::HyloRouter;
 #[global_allocator]
 static A: assert_no_alloc::AllocDisabler = assert_no_alloc::AllocDisabler;
 
-/// Hylo's global state account (`pda::HYLO`) — the venue's market id.
+/// The router's exo registry (`pda::EXO_REGISTRY`) — the venue's market id.
 fn pool() -> Pubkey {
-  pda::HYLO
+  pda::EXO_REGISTRY
 }
 
 fn programs() -> Vec<Pubkey> {

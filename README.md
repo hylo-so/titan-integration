@@ -17,9 +17,10 @@ Two kinds of pairs:
   `[jitoSOL, hyloSOL, hyUSD, xSOL, sHYUSD, USDC]`.
 - Exo pairs listed in the router's `ExoRegistry` (`pda::EXO_REGISTRY`). Each
   entry adds collateral<->hyUSD, collateral<->levercoin, collateral<->USDC and
-  levercoin<->hyUSD. `update_state` reads the registry on every refresh and
-  refetches once when the entry list changed, so a newly registered pair
-  becomes quotable without a restart.
+  levercoin<->hyUSD. The venue is built from the registry account, so its
+  first refresh already fetches every registered pair. `update_state` reads
+  the registry on every refresh; when the entry list changed it keeps the
+  previous state and the next refresh fetches the new keys.
 
 Both halves go through Hylo's standard interfaces, exactly like the Jupiter
 integration: quotes call `ProtocolState::runtime_quote` from `hylo-quotes`
@@ -32,8 +33,9 @@ Layers:
 
 - Quote: `src/hylo/` (`HyloRouter`, `quotes::runtime_quote`,
   `instructions::swap_instruction`, `parse_pool_creations`). A "pool
-  creation" is the static `pda::HYLO` pool plus one `pda::EXO_REGISTRY` pool
-  per router `register_exo_entry` instruction.
+  creation" is the static `pda::EXO_REGISTRY` pool over the enshrined mints,
+  plus the same pool with the new mints for each router `register_exo_entry`
+  instruction.
 - Route builder: `Venue::Hylo { token_a, token_b }` in
   `src/swap_route/mod.rs`
 - Program: `program-template/.../instructions/venues/hylo_router.rs`
@@ -58,15 +60,15 @@ route program test. Both dump only when a file is missing, so after an
 onchain upgrade delete the stale `.so` files and run `make dump-programs`
 (the route test redumps on its own).
 
-### Known caveats
+### Snapshot semantics in the test harness
 
-`program-template/.../tests/hylo_route.rs` resyncs the LiteSVM clock from
-RPC before every simulated swap while every other account stays cached from
-the first fetch. Once wall time since that fetch exceeds the Pyth
-`oracle_interval_secs`, the exchange rejects the cached feed with
-`PythOracleOutdated` and the test reads red. With 68 directions and ten
-samples each the run exceeds the window, so the test currently fails until
-the harness takes one consistent snapshot.
+`RpcClientCache` stores every account it fetches, including the clock
+sysvar, and never refetches. The suites quote against the accounts from the
+venue's first `update_state` and simulate against those same accounts, so
+the exchange's Pyth age check (`oracle_interval_secs` is 10s on mainnet,
+3s for stablecoin routes) compares a feed and a clock from the same fetch.
+Excluding any account from the cache breaks that and the simulations fail
+with `PythOracleOutdated` once wall time passes the window.
 
 ---
 

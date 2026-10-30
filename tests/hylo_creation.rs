@@ -14,7 +14,7 @@ use titan_integration_template::trading_venue::venue_creation::{
 fn base_pool() -> PoolCreation {
   PoolCreation {
     protocol: PoolProtocol::Hylo,
-    pool: pda::HYLO,
+    pool: pda::EXO_REGISTRY,
     mints: enshrined_mints(),
   }
 }

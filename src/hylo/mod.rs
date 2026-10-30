@@ -4,9 +4,7 @@ mod quotes;
 
 use std::iter::once;
 
-use anchor_lang::AccountDeserialize;
 use async_trait::async_trait;
-use hylo_idl::exchange::accounts::Hylo;
 use hylo_idl::router::instruction_builders::register_exo_entry;
 use hylo_idl::router::types::ExoEntry;
 use hylo_idl::tokens::{
@@ -102,7 +100,7 @@ pub fn parse_pool_creations(
 ) -> Vec<PoolCreation> {
   let base = PoolCreation {
     protocol: PoolProtocol::Hylo,
-    pool: pda::HYLO,
+    pool: pda::EXO_REGISTRY,
     mints: enshrined_mints(),
   };
   once(base)
@@ -260,9 +258,6 @@ impl FromAccount for HyloRouter {
     account: &Account,
   ) -> Result<Self, TradingVenueError> {
     let exo_entries = match *pubkey {
-      pda::HYLO => Hylo::try_deserialize(&mut account.data.as_slice())
-        .map(|_| Vec::new())
-        .ok(),
       pda::EXO_REGISTRY => read_exo_entries(&account.data).ok(),
       _ => None,
     }
@@ -371,24 +366,21 @@ impl TradingVenue for HyloRouter {
     &mut self,
     cache: &dyn AccountsCache,
   ) -> Result<(), TradingVenueError> {
-    // Keys come from the previous registry snapshot; the registry may have
-    // changed while the request was in flight.
     let requested_entries = self.exo_entries.clone();
     let keys = self.get_required_pubkeys_for_update()?;
     let accounts = cache.get_accounts(&keys).await?;
     let (protocol, external) =
       split_fetched(&accounts, requested_entries.len())?;
-    self.exo_entries = registry_entries(protocol)?;
-    if entries_match(&self.exo_entries, &requested_entries) {
+    let entries = registry_entries(protocol)?;
+    if entries_match(&entries, &requested_entries) {
       let (protocol_state, token_info) =
-        build_state(protocol, external, &self.exo_entries)?;
+        build_state(protocol, external, &entries)?;
       self.protocol_state = Some(protocol_state);
       self.token_info = token_info;
       self.initialized = true;
-      Ok(())
-    } else {
-      Box::pin(self.update_state(cache)).await
     }
+    self.exo_entries = entries;
+    Ok(())
   }
 
   fn quote(

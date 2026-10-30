@@ -6,9 +6,9 @@ use litesvm::types::FailedTransactionMetadata;
 use solana_pubkey::Pubkey;
 use titan_integration_template::hylo::HyloRouter;
 
-/// Hylo's global state account (`pda::HYLO`) — the venue's market id.
+/// The router's exo registry (`pda::EXO_REGISTRY`) — the venue's market id.
 fn pool() -> Pubkey {
-  pda::HYLO
+  pda::EXO_REGISTRY
 }
 
 fn venue_programs() -> Vec<Pubkey> {
