@@ -35,7 +35,7 @@
 
           shellTools =
             import ./shell-tools.nix {
-              inherit writeShellApplication curl jq gnused;
+              inherit writeShellApplication curl git jq gnused;
             };
 
         in {
