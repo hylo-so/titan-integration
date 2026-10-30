@@ -1013,9 +1013,9 @@ dependencies = [
 
 [[package]]
 name = "chacha20"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d524456ba66e72eb8b115ff89e01e497f8e6d11d78b70b1aa13c0fbd97540a81"
+checksum = "65c35e4b699c7e15ccbe7ee35c005e4fc0a278d22238a2857e6ce2dadeda1b06"
 dependencies = [
  "cfg-if",
  "cpufeatures 0.3.0",
@@ -2298,6 +2298,49 @@ dependencies = [
  "solana-borsh",
  "solana-program",
  "solana-security-txt",
+]
+
+[[package]]
+name = "hylo-titan-integration"
+version = "0.2.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anchor-lang",
+ "assert_no_alloc",
+ "async-trait",
+ "bincode",
+ "borsh 1.7.0",
+ "dashmap 6.2.1",
+ "env_logger 0.11.11",
+ "hylo-core",
+ "hylo-fix",
+ "hylo-idl",
+ "hylo-quotes",
+ "litesvm",
+ "log",
+ "rand 0.9.4",
+ "solana-account",
+ "solana-account-info",
+ "solana-client",
+ "solana-compute-budget",
+ "solana-hash",
+ "solana-instruction",
+ "solana-instructions-sysvar",
+ "solana-program",
+ "solana-program-option",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rpc-client",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "solana-sysvar",
+ "solana-transaction",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 7.0.0",
+ "spl-token-2022 9.0.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-retry",
 ]
 
 [[package]]
@@ -7746,49 +7789,6 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
-
-[[package]]
-name = "titan-integration-template"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anchor-lang",
- "assert_no_alloc",
- "async-trait",
- "bincode",
- "borsh 1.7.0",
- "dashmap 6.2.1",
- "env_logger 0.11.11",
- "hylo-core",
- "hylo-fix",
- "hylo-idl",
- "hylo-quotes",
- "litesvm",
- "log",
- "rand 0.9.4",
- "solana-account",
- "solana-account-info",
- "solana-client",
- "solana-compute-budget",
- "solana-hash",
- "solana-instruction",
- "solana-instructions-sysvar",
- "solana-program",
- "solana-program-option",
- "solana-program-pack",
- "solana-pubkey",
- "solana-rpc-client",
- "solana-sdk",
- "solana-sdk-ids",
- "solana-sysvar",
- "solana-transaction",
- "spl-associated-token-account 6.0.0",
- "spl-token 7.0.0",
- "spl-token-2022 9.0.0",
- "thiserror 1.0.69",
- "tokio",
- "tokio-retry",
-]
 
 [[package]]
 name = "tokio"

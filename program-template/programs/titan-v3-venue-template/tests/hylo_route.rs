@@ -2,9 +2,9 @@ mod common;
 
 use common::{run_swap_route, RouteConfig};
 use hylo_idl::{earn_pool, exchange, pda, router};
+use hylo_titan_integration::hylo::HyloRouter;
 use litesvm::types::FailedTransactionMetadata;
 use solana_pubkey::Pubkey;
-use titan_integration_template::hylo::HyloRouter;
 
 /// The router's exo registry (`pda::EXO_REGISTRY`) — the venue's market id.
 fn pool() -> Pubkey {

@@ -1,7 +1,25 @@
 [package]
-name = "titan-integration-template"
-version = "0.1.0"
+name = "hylo-titan-integration"
+version = "0.2.0"
 edition = "2024"
+description = "Hylo V2 trading venue integration for the Titan router."
+license = "MPL-2.0"
+homepage = "https://hylo.so"
+repository = "https://github.com/hylo-so/titan-integration"
+readme = "README.md"
+exclude = [
+  ".claude/",
+  ".envrc",
+  ".github/",
+  "Makefile",
+  "flake.lock",
+  "flake.nix",
+  "program-template/",
+  "programs/",
+  "rustfmt.toml",
+  "shell-tools.nix",
+  "tests/",
+]
 
 [features]
 default = []

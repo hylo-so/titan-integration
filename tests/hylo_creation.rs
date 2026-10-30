@@ -3,13 +3,13 @@ use hylo_idl::pda;
 use hylo_idl::router::client::args::RouteV2;
 use hylo_idl::router::instruction_builders::{register_exo_entry, route_v2};
 use hylo_idl::tokens::{CBBTC, HYUSD, TokenMint, USDC, XBTC};
-use solana_instruction::Instruction;
-use solana_pubkey::Pubkey;
-use titan_integration_template::hylo::{enshrined_mints, parse_pool_creations};
-use titan_integration_template::trading_venue::protocol::PoolProtocol;
-use titan_integration_template::trading_venue::venue_creation::{
+use hylo_titan_integration::hylo::{enshrined_mints, parse_pool_creations};
+use hylo_titan_integration::trading_venue::protocol::PoolProtocol;
+use hylo_titan_integration::trading_venue::venue_creation::{
   ParsedInstruction, PoolCreation,
 };
+use solana_instruction::Instruction;
+use solana_pubkey::Pubkey;
 
 fn base_pool() -> PoolCreation {
   PoolCreation {
