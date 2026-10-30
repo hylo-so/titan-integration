@@ -23,10 +23,10 @@ Two kinds of pairs:
 
 Both halves go through Hylo's standard interfaces, exactly like the Jupiter
 integration: quotes call `ProtocolState::runtime_quote` from `hylo-quotes`
-(the same `hylo-core` math the on-chain program executes), bounds come from
+(the same `hylo-core` math the onchain program executes), bounds come from
 `runtime_min_input` / `runtime_max_input`, and every swap leg is one
 `hylo-router` `route_v2` instruction. The router resolves the exchange
-instruction from the mint pair on-chain.
+instruction from the mint pair onchain.
 
 Layers:
 
@@ -55,7 +55,7 @@ same switch.
 The simulation tests load dumped program binaries from two directories:
 `programs/` for the venue suite and `program-template/program-dumps/` for the
 route program test. Both dump only when a file is missing, so after an
-on-chain upgrade delete the stale `.so` files and run `make dump-programs`
+onchain upgrade delete the stale `.so` files and run `make dump-programs`
 (the route test redumps on its own).
 
 ### Known caveats

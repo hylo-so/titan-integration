@@ -32,7 +32,7 @@ use crate::trading_venue::{
 };
 
 /// Bidirectional pairs compiled into the exchange and earn pool programs.
-/// Exo pairs come from the registry at runtime.
+/// Exogenous pairs come from the Hylo router's `exo_registry` at runtime.
 pub const ENSHRINED_PAIRS: [[Pubkey; 2]; 10] = [
   [JITOSOL::MINT, HYUSD::MINT],
   [JITOSOL::MINT, XSOL::MINT],
