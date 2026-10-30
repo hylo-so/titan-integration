@@ -2,9 +2,12 @@ mod error;
 mod instructions;
 mod quotes;
 
-use anchor_lang::{AccountDeserialize, Discriminator};
+use std::iter::once;
+
+use anchor_lang::AccountDeserialize;
 use async_trait::async_trait;
 use hylo_idl::exchange::accounts::Hylo;
+use hylo_idl::router::instruction_builders::register_exo_entry;
 use hylo_idl::router::types::ExoEntry;
 use hylo_idl::tokens::{
   HYLOSOL, HYUSD, JITOSOL, SHYUSD, TokenMint, USDC, XSOL,
@@ -60,40 +63,51 @@ pub fn enshrined_mints() -> Vec<Pubkey> {
     })
 }
 
+/// Collateral mint of a router `register_exo_entry` instruction. Rebuilds
+/// the instruction from each account through the SDK builder and matches
+/// program id, data and the whole account list.
+fn registered_collateral(instruction: &ParsedInstruction) -> Option<Pubkey> {
+  let admin = *instruction.accounts.first()?;
+  instruction.accounts.iter().copied().find(|&candidate| {
+    let expected = register_exo_entry(admin, candidate);
+    expected.program_id == instruction.program_id
+      && expected.data == instruction.data
+      && expected
+        .accounts
+        .iter()
+        .map(|meta| meta.pubkey)
+        .eq(instruction.accounts.iter().copied())
+  })
+}
+
+/// Registry pool for a router `register_exo_entry` instruction.
+fn exo_registration(instruction: &ParsedInstruction) -> Option<PoolCreation> {
+  let collateral_mint = registered_collateral(instruction)?;
+  Some(PoolCreation {
+    protocol: PoolProtocol::Hylo,
+    pool: pda::EXO_REGISTRY,
+    mints: vec![
+      HYUSD::MINT,
+      USDC::MINT,
+      collateral_mint,
+      pda::exo_levercoin_mint(collateral_mint),
+    ],
+  })
+}
+
+/// Base pool over the enshrined mints, then one registry pool per
+/// `register_exo_entry` instruction.
 #[must_use]
 pub fn parse_pool_creations(
   instructions: &[ParsedInstruction],
 ) -> Vec<PoolCreation> {
-  let initial = PoolCreation {
+  let base = PoolCreation {
     protocol: PoolProtocol::Hylo,
     pool: pda::HYLO,
     mints: enshrined_mints(),
   };
-  instructions
-    .iter()
-    .filter_map(|instruction| {
-      let is_registration = instruction.program_id == router::ID
-        && instruction
-          .data
-          .starts_with(router::client::args::RegisterExoEntry::DISCRIMINATOR);
-      is_registration
-        .then(|| {
-          let collateral_mint = *instruction.accounts.get(3)?;
-          let levercoin_mint = *instruction.accounts.get(4)?;
-          Some(PoolCreation {
-            protocol: PoolProtocol::Hylo,
-            pool: pda::EXO_REGISTRY,
-            mints: vec![
-              HYUSD::MINT,
-              USDC::MINT,
-              collateral_mint,
-              levercoin_mint,
-            ],
-          })
-        })
-        .flatten()
-    })
-    .chain(std::iter::once(initial))
+  once(base)
+    .chain(instructions.iter().filter_map(exo_registration))
     .collect()
 }
 
