@@ -1,4 +1,4 @@
-{ writeShellApplication }: {
+{ writeShellApplication, curl, jq, gnused }: {
   lint = writeShellApplication {
     name = "lint";
     text = ''
@@ -53,6 +53,49 @@
         set -euo pipefail
         make dump-programs
         make test-venue
+      "
+    '';
+  };
+
+  publish = writeShellApplication {
+    name = "publish";
+    runtimeInputs = [ curl jq gnused ];
+    text = ''
+      # Orders two MAJOR.MINOR.PATCH versions; prerelease and build
+      # suffixes are dropped. Exit 0 when $1 > $2, 1 when equal, 2 when $1 < $2.
+      semver_compare() {
+        local IFS=.
+        local -a left right
+        read -r -a left <<< "''${1%%[-+]*}"
+        read -r -a right <<< "''${2%%[-+]*}"
+        for i in 0 1 2; do
+          if ((10#''${left[i]:-0} > 10#''${right[i]:-0})); then return 0; fi
+          if ((10#''${left[i]:-0} < 10#''${right[i]:-0})); then return 2; fi
+        done
+        return 1
+      }
+
+      crate=$(sed -n 's/^name = "\(.*\)"$/\1/p' Cargo.toml | head -1)
+      local_version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)
+      published=$(curl -s -A hylo-titan-publish \
+        "https://crates.io/api/v1/crates/$crate" \
+        | jq -r '.crate.max_version // "0.0.0"')
+
+      set +e
+      semver_compare "$local_version" "$published"
+      order=$?
+      set -e
+      case $order in
+        0) echo "$crate $local_version > $published on crates.io. Publishing." ;;
+        1) echo "$crate $local_version already on crates.io. Nothing to publish."
+           exit 0 ;;
+        *) echo "$crate $local_version is older than $published on crates.io." >&2
+           exit 1 ;;
+      esac
+
+      nix develop --command bash -c "
+        set -euo pipefail
+        cargo publish --package $crate
       "
     '';
   };
