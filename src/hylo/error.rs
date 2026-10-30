@@ -32,6 +32,9 @@ pub fn exceeds_liquidity(error: CoreError) -> bool {
       | DestinationCollateral
       | DestinationStablecoin
       | NoValidStablecoinMintFee
+      | NoValidStablecoinRedeemFee
+      | InterpOutOfDomain
+      | MinInputExceedsMax
       | LevercoinMarketCapLimitReached
       | LevercoinMarketCapExceeded
       | DepositLimitExceeded
@@ -51,6 +54,7 @@ fn pool_inactive(error: CoreError) -> bool {
       | NoValidLevercoinMintFee
       | NoValidLevercoinRedeemFee
       | NoValidSwapFee
+      | ParToleranceExceeded
   )
 }
 
@@ -108,6 +112,7 @@ fn config_invalid(error: CoreError) -> bool {
       | RangeUnexpectedBound
       | TargetCollateralRatioTooLow
       | ReserveGateInvalid
+      | InvalidParTolerance
   )
 }
 
@@ -157,6 +162,10 @@ fn math_failed(error: CoreError) -> bool {
       | LstToUsd
       | ExoToUsd
       | RedemptionRateOverflow
+      | CollateralRatioOverflow
+      | MaxRedeemable
+      | MinInputOverflow
+      | YieldHarvestMultiplier
   )
 }
 
