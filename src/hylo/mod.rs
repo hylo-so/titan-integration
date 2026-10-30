@@ -31,8 +31,9 @@ use crate::trading_venue::{
   FromAccount, QuoteRequest, QuoteResult, SwapType, TradingVenue,
 };
 
-/// Bidirectional swap pairs supported by Hylo router.
-pub const PAIRS: [[Pubkey; 2]; 10] = [
+/// Bidirectional pairs compiled into the exchange and earn pool programs.
+/// Exo pairs come from the registry at runtime.
+pub const ENSHRINED_PAIRS: [[Pubkey; 2]; 10] = [
   [JITOSOL::MINT, HYUSD::MINT],
   [JITOSOL::MINT, XSOL::MINT],
   [JITOSOL::MINT, HYLOSOL::MINT],
@@ -45,10 +46,10 @@ pub const PAIRS: [[Pubkey; 2]; 10] = [
   [HYUSD::MINT, SHYUSD::MINT],
 ];
 
-/// Unique mints appearing in [`PAIRS`].
+/// Unique mints appearing in [`ENSHRINED_PAIRS`].
 #[must_use]
-pub fn pair_mints() -> Vec<Pubkey> {
-  PAIRS
+pub fn enshrined_mints() -> Vec<Pubkey> {
+  ENSHRINED_PAIRS
     .as_flattened()
     .iter()
     .fold(Vec::new(), |mut acc, mint| {
@@ -66,7 +67,7 @@ pub fn parse_pool_creations(
   let initial = PoolCreation {
     protocol: PoolProtocol::Hylo,
     pool: pda::HYLO,
-    mints: pair_mints(),
+    mints: enshrined_mints(),
   };
   instructions
     .iter()
@@ -207,7 +208,7 @@ impl TradingVenue for HyloRouter {
         .position(|info| info.pubkey == *mint)
         .and_then(|i| u8::try_from(i).ok())
     };
-    PAIRS
+    ENSHRINED_PAIRS
       .iter()
       .copied()
       .chain(self.exo_entries.iter().flat_map(|entry| {

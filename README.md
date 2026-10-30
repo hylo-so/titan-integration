@@ -13,7 +13,7 @@ USDC pair. One venue (`src/hylo/`, `HyloRouter`) covers every direction.
 Two kinds of pairs:
 
 - Enshrined pairs compiled into the exchange and earn pool programs: the ten
-  bidirectional pairs in `PAIRS` over
+  bidirectional pairs in `ENSHRINED_PAIRS` over
   `[jitoSOL, hyloSOL, hyUSD, xSOL, sHYUSD, USDC]`.
 - Exo pairs listed in the router's `ExoRegistry` (`pda::EXO_REGISTRY`). Each
   entry adds collateral<->hyUSD, collateral<->levercoin, collateral<->USDC and
