@@ -24,7 +24,6 @@ use solana_program::clock::Clock;
 use solana_pubkey::Pubkey;
 
 use self::error::error_chain;
-use self::quotes::HyloRuntimeQuote;
 use crate::account_caching::AccountsCache;
 use crate::trading_venue::error::TradingVenueError;
 use crate::trading_venue::protocol::PoolProtocol;
@@ -394,45 +393,13 @@ impl TradingVenue for HyloRouter {
 
   fn quote(
     &self,
-    QuoteRequest {
-      input_mint,
-      output_mint,
-      amount,
-      swap_type,
-    }: QuoteRequest,
+    request: QuoteRequest,
   ) -> Result<QuoteResult, TradingVenueError> {
-    if matches!(swap_type, SwapType::ExactOut) {
-      Err(TradingVenueError::ExactOutNotSupported)?;
-    }
-    let quote = quotes::runtime_quote(
-      self.protocol_state()?,
-      &self.exo_entries,
-      input_mint,
-      output_mint,
-      amount,
-    )?;
-    let result = match quote {
-      Some(HyloRuntimeQuote {
-        expected_output,
-        price,
-      }) => QuoteResult {
-        input_mint,
-        output_mint,
-        amount,
-        expected_output,
-        not_enough_liquidity: false,
-        price,
-      },
-      None => QuoteResult {
-        input_mint,
-        output_mint,
-        amount,
-        expected_output: 0,
-        not_enough_liquidity: true,
-        price: 0.0,
-      },
+    let state = match request.swap_type {
+      SwapType::ExactIn => self.protocol_state()?,
+      SwapType::ExactOut => Err(TradingVenueError::ExactOutNotSupported)?,
     };
-    Ok(result)
+    quotes::quote(state, &self.exo_entries, &request)
   }
 
   fn generate_swap_instruction(
