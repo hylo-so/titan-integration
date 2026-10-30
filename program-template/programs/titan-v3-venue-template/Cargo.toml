@@ -27,7 +27,7 @@ swap-logging = []
 [dependencies]
 anchor-lang = "0.32.1"
 anchor-spl = "0.32.1"
-hylo-idl = "2.3.7"
+hylo-idl = "2.7.3"
 
 [dev-dependencies]
 borsh = "0.10.4"

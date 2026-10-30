@@ -36,6 +36,7 @@ pub fn exceeds_liquidity(error: CoreError) -> bool {
       | LevercoinMarketCapExceeded
       | DepositLimitExceeded
       | WithdrawalLimitExceededForEpoch
+      | UsdcReserveBelowMinimum
   )
 }
 
@@ -106,6 +107,7 @@ fn config_invalid(error: CoreError) -> bool {
       | BorrowRateValidation
       | RangeUnexpectedBound
       | TargetCollateralRatioTooLow
+      | ReserveGateInvalid
   )
 }
 
@@ -152,6 +154,9 @@ fn math_failed(error: CoreError) -> bool {
       | LevercoinMarketCapArithmetic
       | DepositLimitArithmetic
       | WithdrawalLimitArithmetic
+      | LstToUsd
+      | ExoToUsd
+      | RedemptionRateOverflow
   )
 }
 
@@ -166,7 +171,8 @@ impl From<CoreError> for TradingVenueError {
       TradingVenueError::DeserializationFailed(info)
     } else if matches!(error, ProtocolAccountNotFound) {
       TradingVenueError::NoAccountFound(info)
-    } else if matches!(error, UnknownLstMint) {
+    } else if matches!(error, UnknownLstMint | UnknownExoMint | UnroutablePair)
+    {
       TradingVenueError::InvalidMint(info)
     } else if conversion_failed(error) {
       TradingVenueError::DataConversionError(info)

@@ -802,7 +802,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "115e54d64eb62cdebad391c19efc9dce4981c690c85a33a12199d99bb9546fee"
 dependencies = [
  "borsh-derive 0.10.4",
- "hashbrown 0.13.2",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -2159,8 +2159,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-clients"
-version = "2.7.0"
-source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76c587cab323c40b12e5abcca42a3c808a9c77565a6f10a371584d894e2821da"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2186,8 +2187,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-core"
-version = "2.7.0"
-source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c16042e7d4d421e7ae93ce29cda6d25f43497a8f5fd2a8ea5715c2398d3a12a8"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2218,12 +2220,12 @@ dependencies = [
 
 [[package]]
 name = "hylo-idl"
-version = "2.7.0"
-source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4decb37eb4c134cd324ed5191f0a31da3c7fbe7aa268ef071d52290788fd39b"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "anyhow",
  "bytemuck",
  "const-crypto",
  "hylo-fix",
@@ -2249,8 +2251,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-quotes"
-version = "2.7.0"
-source = "git+https://github.com/hylo-so/sdk?branch=exo-registry#45b622d2b1491f53039b5aee52c3d483efe266e0"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba276decb60c42ace007877228cef663cd8156eccc41b51ef155bb10d83c4d3b"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -7754,7 +7757,6 @@ dependencies = [
  "async-trait",
  "bincode",
  "borsh 1.7.0",
- "bytemuck",
  "dashmap 6.2.1",
  "env_logger 0.11.11",
  "hylo-core",
