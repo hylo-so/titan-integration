@@ -5,47 +5,68 @@ integration template.
 
 ## Hylo V2 venue
 
-Hylo is an LST-collateralized exchange, not a pool AMM: it mints/redeems the
-hyUSD stablecoin and the xSOL levercoin against LST collateral, converts
-between them, and swaps LST<->LST through its vaults. One venue
-(`src/hylo/`, `HyloVenue`) covers all 12 directions over
-`[jitoSOL, hyloSOL, hyUSD, xSOL]`; the market account is Hylo's global state
-(`pda::HYLO`).
+Hylo is a collateralized exchange, not a pool AMM: it mints and redeems the
+hyUSD stablecoin and a levercoin against collateral, converts between them,
+swaps LST<->LST through its vaults, and swaps collateral<->USDC through the
+USDC pair. One venue (`src/hylo/`, `HyloRouter`) covers every direction.
+
+Two kinds of pairs:
+
+- Enshrined pairs compiled into the exchange and earn pool programs: the ten
+  bidirectional pairs in `PAIRS` over
+  `[jitoSOL, hyloSOL, hyUSD, xSOL, sHYUSD, USDC]`.
+- Exo pairs listed in the router's `ExoRegistry` (`pda::EXO_REGISTRY`). Each
+  entry adds collateral<->hyUSD, collateral<->levercoin, collateral<->USDC and
+  levercoin<->hyUSD. `update_state` reads the registry on every refresh and
+  refetches once when the entry list changed, so a newly registered pair
+  becomes quotable without a restart.
 
 Both halves go through Hylo's standard interfaces, exactly like the Jupiter
-integration: quotes load `ProtocolState` from `hylo-quotes` (the same
-`hylo-core` math the on-chain program executes), and every swap leg is one
-`hylo-router` `route` instruction — the router resolves the exchange
+integration: quotes call `ProtocolState::runtime_quote` from `hylo-quotes`
+(the same `hylo-core` math the on-chain program executes), bounds come from
+`runtime_min_input` / `runtime_max_input`, and every swap leg is one
+`hylo-router` `route_v2` instruction. The router resolves the exchange
 instruction from the mint pair on-chain.
 
 Layers:
 
-- Quote: `src/hylo/` (`HyloVenue`, `HyloOp`, `parse_pool_creations` —
-  a "pool creation" is `register_lst`)
+- Quote: `src/hylo/` (`HyloRouter`, `quotes::runtime_quote`,
+  `instructions::swap_instruction`, `parse_pool_creations`). A "pool
+  creation" is the static `pda::HYLO` pool plus one `pda::EXO_REGISTRY` pool
+  per router `register_exo_entry` instruction.
 - Route builder: `Venue::Hylo { token_a, token_b }` in
   `src/swap_route/mod.rs`
 - Program: `program-template/.../instructions/venues/hylo_router.rs`
 - Tests: `tests/hylo.rs`, `tests/hylo_creation.rs`,
   `program-template/.../tests/hylo_route.rs`
 
-### Deployment: the `shadow` feature
+### Deployment
 
-Hylo V2 currently runs as the mainnet **shadow** deployment
-(`hyshEX5sNEYhnYPMm8MwMThhBRPuLN3rjoYDbC9esPQ`); the canonical id
-(`HYEXCHtHkBagdStcJCp3xbbb9B7sdMdWXFNj6mdsG4hn`) still serves V1. The
-`shadow` cargo feature — **on by default** in both crates — points every
-program id and PDA at the live V2 deployment. When V2 is promoted to the
-canonical id, drop `shadow` from the `default` feature lists in `Cargo.toml`
-and `program-template/programs/titan-v3-venue-template/Cargo.toml` and update
-`HYLO_EXCHANGE` / `HYLO_ROUTER` in the `Makefile`.
+Both crates target the canonical mainnet programs
+(`HYEXCHtHkBagdStcJCp3xbbb9B7sdMdWXFNj6mdsG4hn`,
+`hyRouTRDAgn65xyyJ3L5c4k5SFmSdr3NxDV8Euzjy3f`,
+`HysTabVUfmQBFcmzu1ctRd1Y1fxd66RBpboy1bmtDSQQ`). The `shadow` cargo feature
+is off by default and points every program id and PDA at the shadow
+deployment; `HYLO_EXCHANGE` / `HYLO_ROUTER` in the `Makefile` would need the
+same switch.
 
-### Known caveats (shadow, as of 2026-07)
+### Program dumps
 
-The RPC-gated simulation tests require the shadow SOL/USD Pyth feed
-(`7AviUf9n...`) to be fresh within `oracle_interval_secs` (currently 10s on
-shadow) at snapshot time; when the shadow price crank lags, `update_state`
-fails with `PythOracleOutdated` and the suite reads red. Retry, or bump the
-shadow oracle interval.
+The simulation tests load dumped program binaries from two directories:
+`programs/` for the venue suite and `program-template/program-dumps/` for the
+route program test. Both dump only when a file is missing, so after an
+on-chain upgrade delete the stale `.so` files and run `make dump-programs`
+(the route test redumps on its own).
+
+### Known caveats
+
+`program-template/.../tests/hylo_route.rs` resyncs the LiteSVM clock from
+RPC before every simulated swap while every other account stays cached from
+the first fetch. Once wall time since that fetch exceeds the Pyth
+`oracle_interval_secs`, the exchange rejects the cached feed with
+`PythOracleOutdated` and the test reads red. With 68 directions and ten
+samples each the run exceeds the window, so the test currently fails until
+the harness takes one consistent snapshot.
 
 ---
 
