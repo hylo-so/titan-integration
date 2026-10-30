@@ -215,6 +215,7 @@ impl TradingVenue for HyloRouter {
           [entry.collateral_mint, HYUSD::MINT],
           [entry.collateral_mint, entry.levercoin_mint],
           [entry.collateral_mint, USDC::MINT],
+          [entry.levercoin_mint, HYUSD::MINT],
         ]
       }))
       .filter_map(|[a, b]| {
