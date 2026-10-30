@@ -937,9 +937,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.25.0"
+version = "1.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec"
+checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
 dependencies = [
  "bytemuck_derive",
 ]
@@ -2172,9 +2172,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-clients"
-version = "2.3.7"
+version = "2.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e99acc48db3e3acc55c892f6e258173b9d987c78001e5e19655520e9a1bdf7f"
+checksum = "76c587cab323c40b12e5abcca42a3c808a9c77565a6f10a371584d894e2821da"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2200,9 +2200,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-core"
-version = "2.3.8"
+version = "2.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "026dd65a7b91c8a84c9241e507ca1aaccb4cb6f4c28ddd9f2ed8fdd8982a4019"
+checksum = "c16042e7d4d421e7ae93ce29cda6d25f43497a8f5fd2a8ea5715c2398d3a12a8"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2217,16 +2217,15 @@ dependencies = [
 
 [[package]]
 name = "hylo-fix"
-version = "0.7.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef27049ab1246df4990a9e2ed6aa932981331e68935307e6f8e91ae8ba2cacc2"
+checksum = "4026a27a20485d36c85099fcd47d63c3d3b1c2b884631d6ec174fa30bfa810cb"
 dependencies = [
  "anchor-lang",
  "anyhow",
  "muldiv",
  "num-traits",
  "paste",
- "quote",
  "serde",
  "typed_floats",
  "typenum",
@@ -2234,13 +2233,13 @@ dependencies = [
 
 [[package]]
 name = "hylo-idl"
-version = "2.3.8"
+version = "2.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20b9b43b140d1ac41aae71dc4127b989511b4c44b274ccbadfea7caaff0f2934"
+checksum = "b4decb37eb4c134cd324ed5191f0a31da3c7fbe7aa268ef071d52290788fd39b"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "anyhow",
+ "bytemuck",
  "const-crypto",
  "hylo-fix",
  "mpl-token-metadata",
@@ -2265,9 +2264,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-quotes"
-version = "2.3.8"
+version = "2.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd2829ae2f3ffc138444dd3d77af7878d4aa421c39e07796b0674b1b2ba5616a"
+checksum = "ba276decb60c42ace007877228cef663cd8156eccc41b51ef155bb10d83c4d3b"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2275,6 +2274,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bincode",
+ "bytemuck",
  "hylo-clients",
  "hylo-core",
  "hylo-fix",
@@ -2311,6 +2311,49 @@ dependencies = [
  "solana-borsh",
  "solana-program",
  "solana-security-txt",
+]
+
+[[package]]
+name = "hylo-titan-integration"
+version = "0.2.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anchor-lang",
+ "assert_no_alloc",
+ "async-trait",
+ "bincode",
+ "borsh 1.7.0",
+ "dashmap 6.2.1",
+ "env_logger 0.11.11",
+ "hylo-core",
+ "hylo-fix",
+ "hylo-idl",
+ "hylo-quotes",
+ "litesvm",
+ "log",
+ "rand 0.9.5",
+ "solana-account",
+ "solana-account-info",
+ "solana-client",
+ "solana-compute-budget",
+ "solana-hash",
+ "solana-instruction",
+ "solana-instructions-sysvar",
+ "solana-program",
+ "solana-program-option",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rpc-client",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "solana-sysvar",
+ "solana-transaction",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 7.0.0",
+ "spl-token-2022 9.0.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-retry",
 ]
 
 [[package]]
@@ -7770,49 +7813,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
-name = "titan-integration-template"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anchor-lang",
- "assert_no_alloc",
- "async-trait",
- "bincode",
- "borsh 1.7.0",
- "dashmap 6.2.1",
- "env_logger 0.11.11",
- "hylo-core",
- "hylo-fix",
- "hylo-idl",
- "hylo-quotes",
- "litesvm",
- "log",
- "rand 0.9.5",
- "solana-account",
- "solana-account-info",
- "solana-client",
- "solana-compute-budget",
- "solana-hash",
- "solana-instruction",
- "solana-instructions-sysvar",
- "solana-program",
- "solana-program-option",
- "solana-program-pack",
- "solana-pubkey",
- "solana-rpc-client",
- "solana-sdk",
- "solana-sdk-ids",
- "solana-sysvar",
- "solana-transaction",
- "spl-associated-token-account 6.0.0",
- "spl-token 7.0.0",
- "spl-token-2022 9.0.0",
- "thiserror 1.0.69",
- "tokio",
- "tokio-retry",
-]
-
-[[package]]
 name = "titan-v3-venue-template"
 version = "0.1.0"
 dependencies = [
@@ -7821,6 +7821,7 @@ dependencies = [
  "borsh 0.10.4",
  "env_logger 0.11.11",
  "hylo-idl",
+ "hylo-titan-integration",
  "litesvm",
  "log",
  "solana-account",
@@ -7836,7 +7837,6 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 7.0.0",
  "spl-token-2022 9.0.0",
- "titan-integration-template",
  "tokio",
  "tokio-retry",
 ]

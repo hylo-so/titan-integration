@@ -32,10 +32,14 @@ pub fn exceeds_liquidity(error: CoreError) -> bool {
       | DestinationCollateral
       | DestinationStablecoin
       | NoValidStablecoinMintFee
+      | NoValidStablecoinRedeemFee
+      | InterpOutOfDomain
+      | MinInputExceedsMax
       | LevercoinMarketCapLimitReached
       | LevercoinMarketCapExceeded
       | DepositLimitExceeded
       | WithdrawalLimitExceededForEpoch
+      | UsdcReserveBelowMinimum
   )
 }
 
@@ -50,6 +54,7 @@ fn pool_inactive(error: CoreError) -> bool {
       | NoValidLevercoinMintFee
       | NoValidLevercoinRedeemFee
       | NoValidSwapFee
+      | ParToleranceExceeded
   )
 }
 
@@ -94,7 +99,6 @@ fn config_invalid(error: CoreError) -> bool {
     error,
     InvalidFees
       | YieldHarvestConfigValidation
-      | YieldHarvestAllocation
       | OracleIntervalSecsInvalid
       | OracleConfToleranceInvalid
       | StablecoinMintThresholdInvalid
@@ -107,6 +111,8 @@ fn config_invalid(error: CoreError) -> bool {
       | BorrowRateValidation
       | RangeUnexpectedBound
       | TargetCollateralRatioTooLow
+      | ReserveGateInvalid
+      | InvalidParTolerance
   )
 }
 
@@ -121,7 +127,6 @@ fn math_failed(error: CoreError) -> bool {
       | LstSolPriceConversion
       | SolLstPriceConversion
       | LstLstPriceConversion
-      | CollateralRatio
       | MaxMintable
       | MaxSwappable
       | StablecoinNav
@@ -154,6 +159,13 @@ fn math_failed(error: CoreError) -> bool {
       | LevercoinMarketCapArithmetic
       | DepositLimitArithmetic
       | WithdrawalLimitArithmetic
+      | LstToUsd
+      | ExoToUsd
+      | RedemptionRateOverflow
+      | CollateralRatioOverflow
+      | MaxRedeemable
+      | MinInputOverflow
+      | YieldHarvestMultiplier
   )
 }
 
@@ -168,7 +180,8 @@ impl From<CoreError> for TradingVenueError {
       TradingVenueError::DeserializationFailed(info)
     } else if matches!(error, ProtocolAccountNotFound) {
       TradingVenueError::NoAccountFound(info)
-    } else if matches!(error, UnknownLstMint) {
+    } else if matches!(error, UnknownLstMint | UnknownExoMint | UnroutablePair)
+    {
       TradingVenueError::InvalidMint(info)
     } else if conversion_failed(error) {
       TradingVenueError::DataConversionError(info)
