@@ -2172,9 +2172,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-clients"
-version = "2.7.3"
+version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76c587cab323c40b12e5abcca42a3c808a9c77565a6f10a371584d894e2821da"
+checksum = "7628e5a7749e01ad4937c5dbe73a4ce62d24887ca3eafce9c714590357e84869"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2200,9 +2200,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-core"
-version = "2.7.3"
+version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c16042e7d4d421e7ae93ce29cda6d25f43497a8f5fd2a8ea5715c2398d3a12a8"
+checksum = "dabaed3324deddf6255166c81caa147529cbfdef088226fae3894bd2ab53d339"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2233,9 +2233,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-idl"
-version = "2.7.3"
+version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4decb37eb4c134cd324ed5191f0a31da3c7fbe7aa268ef071d52290788fd39b"
+checksum = "0625238952efc7a8b9c490d7022bcca3c38c95d9018ef79d4083cf3941426945"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2264,9 +2264,9 @@ dependencies = [
 
 [[package]]
 name = "hylo-quotes"
-version = "2.7.3"
+version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba276decb60c42ace007877228cef663cd8156eccc41b51ef155bb10d83c4d3b"
+checksum = "b7c40fb65b592d711899fff69618cd90db7c3f83a2c153e9ce3d3aee692e0d0a"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2409,7 +2409,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -3518,7 +3518,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.41",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -3558,7 +3558,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "tracing",
  "windows-sys 0.61.2",
 ]
