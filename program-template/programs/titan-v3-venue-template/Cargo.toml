@@ -27,7 +27,7 @@ swap-logging = []
 [dependencies]
 anchor-lang = "0.32.1"
 anchor-spl = "0.32.1"
-hylo-idl = "2.3.7"
+hylo-idl = "2.7.3"
 
 [dev-dependencies]
 borsh = "0.10.4"
@@ -47,6 +47,6 @@ solana-transaction = "2.2.1"
 spl-associated-token-account = "6"
 spl-token = { version = "7", features = ["no-entrypoint"] }
 spl-token-2022 = { version = "^9", features = ["no-entrypoint"] }
-titan-integration-template = { path = "../../.." }
+hylo-titan-integration = { path = "../../.." }
 tokio = { version = "1.38.0", features = ["full"] }
 tokio-retry = "0.3.2"

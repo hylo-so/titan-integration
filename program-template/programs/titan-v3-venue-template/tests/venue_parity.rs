@@ -1,6 +1,6 @@
 use anchor_lang::AnchorSerialize;
+use hylo_titan_integration::swap_route::Venue as RouteBuilderVenue;
 use solana_pubkey::Pubkey;
-use titan_integration_template::swap_route::Venue as RouteBuilderVenue;
 use titan_v3_venue_template::state::Venue as ProgramVenue;
 
 #[test]
