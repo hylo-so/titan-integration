@@ -1,5 +1,5 @@
-use hylo_idl::router::types::ExoEntry;
 use hylo_quotes::prelude::ProtocolState;
+use hylo_quotes::protocol_state::ExoRoute;
 use hylo_quotes::token_operation::RuntimeQuote;
 use solana_program::clock::Clock;
 
@@ -11,7 +11,7 @@ use crate::trading_venue::{QuoteRequest, QuoteResult};
 /// flagged `not_enough_liquidity`.
 pub fn quote(
   state: &ProtocolState<Clock>,
-  exo_entries: &[ExoEntry],
+  exo_routes: &[ExoRoute],
   &QuoteRequest {
     input_mint,
     output_mint,
@@ -27,6 +27,7 @@ pub fn quote(
     not_enough_liquidity: true,
     price: 0.0,
   };
+  let exo_entries = exo_routes.iter().map(|route| &route.entry);
   match state.runtime_quote(exo_entries, input_mint, output_mint, amount) {
     Ok(RuntimeQuote {
       out_amount,
