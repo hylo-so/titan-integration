@@ -19,8 +19,9 @@ Two kinds of pairs:
   entry adds collateral<->hyUSD, collateral<->levercoin, collateral<->USDC and
   levercoin<->hyUSD. The venue is built from the registry account, so its
   first refresh already fetches every registered pair. `update_state` reads
-  the registry on every refresh; when the entry list changed it keeps the
-  previous state and the next refresh fetches the new keys.
+  the registry and the `ExoPair` account of every entry on each refresh, then
+  fetches the accounts of those entries, so a pair quotes from the first
+  refresh after its registration.
 
 Both halves go through Hylo's standard interfaces, exactly like the Jupiter
 integration: quotes call `ProtocolState::runtime_quote` from `hylo-quotes`

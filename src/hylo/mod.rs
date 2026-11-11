@@ -2,7 +2,6 @@ mod error;
 mod instructions;
 mod quotes;
 
-use std::collections::HashMap;
 use std::iter::once;
 
 use async_trait::async_trait;
@@ -153,21 +152,42 @@ fn split_fetched(
     .ok_or(TradingVenueError::FailedToFetchMultipleAccountData)
 }
 
-/// Reads the registry entries and the oracle of each fetched exo pair.
-fn read_exo_routes(
-  fetched: &HashMap<Pubkey, &Account>,
+/// Reads the registry entries and the oracle of each exo pair from the cache.
+async fn resolve_exo_routes(
+  cache: &dyn AccountsCache,
 ) -> Result<Vec<ExoRoute>, TradingVenueError> {
-  let registry = fetched
-    .get(&pda::EXO_REGISTRY)
+  let registry = cache
+    .get_account(&pda::EXO_REGISTRY)
+    .await?
     .ok_or(TradingVenueError::NoAccountFound(pda::EXO_REGISTRY.into()))?;
-  read_exo_entries(&registry.data)
-    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?
+  let entries = read_exo_entries(&registry.data)
+    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?;
+  let exo_pairs = entries
+    .iter()
+    .map(|entry| pda::exo_pair(entry.collateral_mint))
+    .collect::<Vec<_>>();
+  let accounts = cache.get_accounts(&exo_pairs).await?;
+  entries
     .into_iter()
-    .map(|entry| {
-      let exo_pair = fetched.get(&pda::exo_pair(entry.collateral_mint));
-      ExoRoute::new(entry, exo_pair.copied())
+    .zip(exo_pairs)
+    .zip(&accounts)
+    .map(|((entry, exo_pair), account)| {
+      let account = account
+        .as_ref()
+        .ok_or(TradingVenueError::NoAccountFound(exo_pair.into()))?;
+      ExoRoute::new(entry, Some(account))
         .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))
     })
+    .collect()
+}
+
+/// Pubkeys of the protocol accounts, the accounts of `exo_routes` and the
+/// external mints, in fetch order.
+fn required_pubkeys(exo_routes: &[ExoRoute]) -> Vec<Pubkey> {
+  ProtocolAccounts::PUBKEYS
+    .into_iter()
+    .chain(exo_routes.iter().flat_map(ExoRoute::pubkeys))
+    .chain(ExternalMints::PUBKEYS)
     .collect()
 }
 
@@ -353,45 +373,22 @@ impl TradingVenue for HyloRouter {
   fn get_required_pubkeys_for_update(
     &self,
   ) -> Result<Vec<Pubkey>, TradingVenueError> {
-    Ok(
-      ProtocolAccounts::PUBKEYS
-        .into_iter()
-        .chain(self.exo_routes.iter().flat_map(ExoRoute::pubkeys))
-        .chain(ExternalMints::PUBKEYS)
-        .collect(),
-    )
+    Ok(required_pubkeys(&self.exo_routes))
   }
 
   async fn update_state(
     &mut self,
     cache: &dyn AccountsCache,
   ) -> Result<(), TradingVenueError> {
-    // Fetch until the exo routes match the fetched keys
-    let accounts = loop {
-      let keys = self.get_required_pubkeys_for_update()?;
-      let accounts = cache.get_accounts(&keys).await?;
-      let fetched = keys
-        .iter()
-        .zip(&accounts)
-        .filter_map(|(key, account)| Some((*key, account.as_ref()?)))
-        .collect();
-      self.exo_routes = read_exo_routes(&fetched)?;
-      if self.get_required_pubkeys_for_update()? == keys {
-        break accounts;
-      }
-    };
-    self.exo_routes.iter().try_for_each(|route| {
-      let exo_pair = pda::exo_pair(route.entry.collateral_mint);
-      route
-        .oracle
-        .map(drop)
-        .ok_or(TradingVenueError::NoAccountFound(exo_pair.into()))
-    })?;
-    let (protocol, external) = split_fetched(&accounts, self.exo_routes.len())?;
+    let exo_routes = resolve_exo_routes(cache).await?;
+    let keys = required_pubkeys(&exo_routes);
+    let accounts = cache.get_accounts(&keys).await?;
+    let (protocol, external) = split_fetched(&accounts, exo_routes.len())?;
     let (protocol_state, token_info) =
-      build_state(protocol, external, &self.exo_routes)?;
+      build_state(protocol, external, &exo_routes)?;
     self.protocol_state = Some(protocol_state);
     self.token_info = token_info;
+    self.exo_routes = exo_routes;
     self.initialized = true;
     Ok(())
   }
