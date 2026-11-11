@@ -169,12 +169,13 @@ async fn resolve_exo_routes(
   let accounts = cache.get_accounts(&exo_pairs).await?;
   entries
     .into_iter()
-    .zip(exo_pairs)
     .zip(&accounts)
-    .map(|((entry, exo_pair), account)| {
-      let account = account
-        .as_ref()
-        .ok_or(TradingVenueError::NoAccountFound(exo_pair.into()))?;
+    .map(|(entry, account)| {
+      let account = account.as_ref().ok_or_else(|| {
+        TradingVenueError::NoAccountFound(
+          pda::exo_pair(entry.collateral_mint).into(),
+        )
+      })?;
       ExoRoute::new(entry, Some(account))
         .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))
     })
