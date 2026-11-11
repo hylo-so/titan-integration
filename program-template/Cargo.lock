@@ -2173,7 +2173,8 @@ dependencies = [
 [[package]]
 name = "hylo-clients"
 version = "2.7.6"
-source = "git+https://github.com/hylo-so/sdk?rev=eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744#eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b3501ae3da213229ce99d4503869fb7c49db445ae12c8340966fe80f4c80e1b"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2200,7 +2201,8 @@ dependencies = [
 [[package]]
 name = "hylo-core"
 version = "2.7.6"
-source = "git+https://github.com/hylo-so/sdk?rev=eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744#eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "878b6bcfd71b9c48a8679a7f9844ff0617942978d68d245eef6ddac931ab908d"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2232,7 +2234,8 @@ dependencies = [
 [[package]]
 name = "hylo-idl"
 version = "2.7.6"
-source = "git+https://github.com/hylo-so/sdk?rev=eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744#eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0377b1737d81ce881fc04d0f0a361d979cc2f720f04fe6f92b9243251297a41b"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2262,7 +2265,8 @@ dependencies = [
 [[package]]
 name = "hylo-quotes"
 version = "2.7.6"
-source = "git+https://github.com/hylo-so/sdk?rev=eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744#eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "646c31bc5473967a89f0299697733d741dd0b9337b407e912a5fdfc7eff07eaa"
 dependencies = [
  "anchor-client",
  "anchor-lang",
