@@ -60,9 +60,9 @@ rand = "0.9.2"
 assert_no_alloc = { version = "1.1.2", default-features = false }
 anchor-lang = "0.32.1"
 hylo-fix = "0.8.0"
-hylo-core = { version = "2.7.3", features = ["offchain"] }
-hylo-idl = "2.7.3"
-hylo-quotes = "2.7.3"
+hylo-core = { version = "2.7.6", features = ["offchain"] }
+hylo-idl = "2.7.6"
+hylo-quotes = "2.7.6"
 
 # Used only for the construction allocation check. Normal tests, including
 # `quoting_speed`, run under true `--release`.

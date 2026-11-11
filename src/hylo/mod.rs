@@ -6,15 +6,13 @@ use std::iter::once;
 
 use async_trait::async_trait;
 use hylo_idl::router::instruction_builders::register_exo_entry;
-use hylo_idl::router::types::ExoEntry;
 use hylo_idl::tokens::{
   HYLOSOL, HYUSD, JITOSOL, SHYUSD, TokenMint, USDC, XSOL,
 };
 use hylo_idl::{earn_pool, exchange, pda, router};
 use hylo_quotes::prelude::ProtocolState;
 use hylo_quotes::protocol_state::{
-  EXO_PAIR_ACCOUNTS, ProtocolAccounts, exo_pubkeys_from_entries,
-  read_exo_entries,
+  EXO_PAIR_ACCOUNTS, ExoRoute, ProtocolAccounts, read_exo_entries,
 };
 use solana_account::Account;
 use solana_instruction::Instruction;
@@ -154,17 +152,44 @@ fn split_fetched(
     .ok_or(TradingVenueError::FailedToFetchMultipleAccountData)
 }
 
-/// Registry entries from the exo registry account, the last of
-/// [`ProtocolAccounts::PUBKEYS`].
-fn registry_entries(
-  protocol: &[Option<Account>],
-) -> Result<Vec<ExoEntry>, TradingVenueError> {
-  let registry = protocol
-    .get(ProtocolAccounts::PUBKEYS.len() - 1)
-    .and_then(Option::as_ref)
+/// Reads the registry entries and the oracle of each exo pair from the cache.
+async fn resolve_exo_routes(
+  cache: &dyn AccountsCache,
+) -> Result<Vec<ExoRoute>, TradingVenueError> {
+  let registry = cache
+    .get_account(&pda::EXO_REGISTRY)
+    .await?
     .ok_or(TradingVenueError::NoAccountFound(pda::EXO_REGISTRY.into()))?;
-  read_exo_entries(&registry.data)
-    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))
+  let entries = read_exo_entries(&registry.data)
+    .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))?;
+  let exo_pairs = entries
+    .iter()
+    .map(|entry| pda::exo_pair(entry.collateral_mint))
+    .collect::<Vec<_>>();
+  let accounts = cache.get_accounts(&exo_pairs).await?;
+  entries
+    .into_iter()
+    .zip(&accounts)
+    .map(|(entry, account)| {
+      let account = account.as_ref().ok_or_else(|| {
+        TradingVenueError::NoAccountFound(
+          pda::exo_pair(entry.collateral_mint).into(),
+        )
+      })?;
+      ExoRoute::new(entry, Some(account))
+        .map_err(|e| TradingVenueError::DeserializationFailed(error_chain(e)))
+    })
+    .collect()
+}
+
+/// Pubkeys of the protocol accounts, the accounts of `exo_routes` and the
+/// external mints, in fetch order.
+fn required_pubkeys(exo_routes: &[ExoRoute]) -> Vec<Pubkey> {
+  ProtocolAccounts::PUBKEYS
+    .into_iter()
+    .chain(exo_routes.iter().flat_map(ExoRoute::pubkeys))
+    .chain(ExternalMints::PUBKEYS)
+    .collect()
 }
 
 /// Token info for the enshrined mints and every registered exo mint, sorted
@@ -176,16 +201,16 @@ fn token_info(
     hylosol,
     usdc,
   }: ExternalMints<'_>,
-  entries: &[ExoEntry],
+  exo_routes: &[ExoRoute],
   epoch: u64,
 ) -> Result<Vec<TokenInfo>, TradingVenueError> {
-  let exo_mints = entries
+  let exo_mints = exo_routes
     .iter()
     .zip(&protocol_accounts.exo_accounts)
-    .flat_map(|(entry, accounts)| {
+    .flat_map(|(route, accounts)| {
       [
-        (entry.collateral_mint, &accounts.collateral_mint),
-        (entry.levercoin_mint, &accounts.levercoin_mint),
+        (route.entry.collateral_mint, &accounts.collateral_mint),
+        (route.entry.levercoin_mint, &accounts.levercoin_mint),
       ]
     });
   let mut token_info = [
@@ -209,7 +234,7 @@ fn token_info(
 fn build_state(
   protocol: &[Option<Account>],
   external: &[Option<Account>],
-  entries: &[ExoEntry],
+  exo_routes: &[ExoRoute],
 ) -> Result<(ProtocolState<Clock>, Vec<TokenInfo>), TradingVenueError> {
   let external = ExternalMints::from_fetched(external)?;
   let protocol_accounts = ProtocolAccounts::from_fetched(protocol)
@@ -219,17 +244,8 @@ fn build_state(
   let protocol_state = ProtocolState::try_from(&protocol_accounts)
     .map_err(|e| TradingVenueError::MissingState(error_chain(e)))?;
   let token_info =
-    token_info(&protocol_accounts, external, entries, clock.epoch)?;
+    token_info(&protocol_accounts, external, exo_routes, clock.epoch)?;
   Ok((protocol_state, token_info))
-}
-
-/// Same registry entries in the same order.
-fn entries_match(a: &[ExoEntry], b: &[ExoEntry]) -> bool {
-  a.len() == b.len()
-    && a.iter().zip(b).all(|(x, y)| {
-      x.collateral_mint == y.collateral_mint
-        && x.levercoin_mint == y.levercoin_mint
-    })
 }
 
 /// Hylo V2 exchange venue state.
@@ -237,8 +253,8 @@ pub struct HyloRouter {
   pub pool_id: Pubkey,
   pub protocol_state: Option<ProtocolState<Clock>>,
   pub token_info: Vec<TokenInfo>,
-  /// Registry entries from the preceding `update_state`.
-  pub exo_entries: Vec<ExoEntry>,
+  /// Exo routes from the preceding `update_state`.
+  pub exo_routes: Vec<ExoRoute>,
   pub initialized: bool,
 }
 
@@ -257,16 +273,22 @@ impl FromAccount for HyloRouter {
     pubkey: &Pubkey,
     account: &Account,
   ) -> Result<Self, TradingVenueError> {
-    let exo_entries = match *pubkey {
+    let exo_routes = match *pubkey {
       pda::EXO_REGISTRY => read_exo_entries(&account.data).ok(),
       _ => None,
     }
-    .ok_or(TradingVenueError::FromAccountError((*pubkey).into()))?;
+    .ok_or(TradingVenueError::FromAccountError((*pubkey).into()))?
+    .into_iter()
+    .map(|entry| ExoRoute {
+      entry,
+      oracle: None,
+    })
+    .collect();
     Ok(HyloRouter {
       pool_id: *pubkey,
       protocol_state: None,
       token_info: Vec::new(),
-      exo_entries,
+      exo_routes,
       initialized: false,
     })
   }
@@ -302,7 +324,7 @@ impl TradingVenue for HyloRouter {
     ENSHRINED_PAIRS
       .iter()
       .copied()
-      .chain(self.exo_entries.iter().flat_map(|entry| {
+      .chain(self.exo_routes.iter().flat_map(|ExoRoute { entry, .. }| {
         [
           [entry.collateral_mint, HYUSD::MINT],
           [entry.collateral_mint, entry.levercoin_mint],
@@ -352,34 +374,23 @@ impl TradingVenue for HyloRouter {
   fn get_required_pubkeys_for_update(
     &self,
   ) -> Result<Vec<Pubkey>, TradingVenueError> {
-    let exo_keys = exo_pubkeys_from_entries(&self.exo_entries)?;
-    Ok(
-      ProtocolAccounts::PUBKEYS
-        .into_iter()
-        .chain(exo_keys)
-        .chain(ExternalMints::PUBKEYS)
-        .collect(),
-    )
+    Ok(required_pubkeys(&self.exo_routes))
   }
 
   async fn update_state(
     &mut self,
     cache: &dyn AccountsCache,
   ) -> Result<(), TradingVenueError> {
-    let requested_entries = self.exo_entries.clone();
-    let keys = self.get_required_pubkeys_for_update()?;
+    let exo_routes = resolve_exo_routes(cache).await?;
+    let keys = required_pubkeys(&exo_routes);
     let accounts = cache.get_accounts(&keys).await?;
-    let (protocol, external) =
-      split_fetched(&accounts, requested_entries.len())?;
-    let entries = registry_entries(protocol)?;
-    if entries_match(&entries, &requested_entries) {
-      let (protocol_state, token_info) =
-        build_state(protocol, external, &entries)?;
-      self.protocol_state = Some(protocol_state);
-      self.token_info = token_info;
-      self.initialized = true;
-    }
-    self.exo_entries = entries;
+    let (protocol, external) = split_fetched(&accounts, exo_routes.len())?;
+    let (protocol_state, token_info) =
+      build_state(protocol, external, &exo_routes)?;
+    self.protocol_state = Some(protocol_state);
+    self.token_info = token_info;
+    self.exo_routes = exo_routes;
+    self.initialized = true;
     Ok(())
   }
 
@@ -391,7 +402,7 @@ impl TradingVenue for HyloRouter {
       SwapType::ExactIn => self.protocol_state()?,
       SwapType::ExactOut => Err(TradingVenueError::ExactOutNotSupported)?,
     };
-    quotes::quote(state, &self.exo_entries, &request)
+    quotes::quote(state, &self.exo_routes, &request)
   }
 
   fn generate_swap_instruction(
@@ -399,6 +410,6 @@ impl TradingVenue for HyloRouter {
     request: QuoteRequest,
     user: Pubkey,
   ) -> Result<Instruction, TradingVenueError> {
-    instructions::swap_instruction(&request, user, &self.exo_entries)
+    instructions::swap_instruction(&request, user, &self.exo_routes)
   }
 }

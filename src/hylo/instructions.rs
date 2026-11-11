@@ -10,16 +10,14 @@ use hylo_idl::exchange::account_builders::{
   swap_exo_to_usdc, swap_lst_to_lst, swap_lst_to_usdc, swap_usdc_to_exo,
   swap_usdc_to_lst,
 };
+use hylo_idl::pda;
 use hylo_idl::router::client::args::RouteV2;
 use hylo_idl::router::instruction_builders::route_v2;
-use hylo_idl::router::types::ExoEntry;
 use hylo_idl::tokens::ExoRole::{Collateral, Levercoin, Stablecoin, Usdc};
 use hylo_idl::tokens::{
   HYLOSOL, HYUSD, JITOSOL, SHYUSD, StakePool, TokenMint, USDC, XSOL,
 };
-use hylo_quotes::protocol_state::{
-  exo_entry_role, exo_pyth_feed_by_mint, find_exo_entry,
-};
+use hylo_quotes::protocol_state::{ExoRoute, exo_entry_role};
 use solana_instruction::Instruction;
 use solana_pubkey::Pubkey;
 
@@ -30,14 +28,19 @@ use crate::trading_venue::error::TradingVenueError;
 /// erroring when no registered pair owns either mint.
 fn exo_accounts(
   user: Pubkey,
-  exo_entries: &[ExoEntry],
+  exo_routes: &[ExoRoute],
   input_mint: Pubkey,
   output_mint: Pubkey,
 ) -> Result<Vec<AccountMeta>, TradingVenueError> {
-  let entry = find_exo_entry(exo_entries, input_mint, output_mint)
+  let route = exo_routes
+    .iter()
+    .find(|route| route.owns_either(input_mint, output_mint))
     .ok_or(TradingVenueError::InvalidMint(input_mint.into()))?;
+  let entry = &route.entry;
   let collateral = entry.collateral_mint;
-  let oracle = exo_pyth_feed_by_mint(collateral)?.address;
+  let oracle = route.oracle.ok_or(TradingVenueError::NotInitialized(
+    pda::exo_pair(collateral).into(),
+  ))?;
   let roles = (
     exo_entry_role(entry, input_mint)?,
     exo_entry_role(entry, output_mint)?,
@@ -86,7 +89,7 @@ pub fn swap_instruction(
     ..
   }: &QuoteRequest,
   user: Pubkey,
-  exo_entries: &[ExoEntry],
+  exo_routes: &[ExoRoute],
 ) -> Result<Instruction, TradingVenueError> {
   let accounts = match (input_mint, output_mint) {
     (lst @ (JITOSOL::MINT | HYLOSOL::MINT), HYUSD::MINT) => {
@@ -137,7 +140,7 @@ pub fn swap_instruction(
     }
     (HYUSD::MINT, SHYUSD::MINT) => deposit(user).to_account_metas(None),
     (SHYUSD::MINT, HYUSD::MINT) => withdraw(user).to_account_metas(None),
-    _ => exo_accounts(user, exo_entries, input_mint, output_mint)?,
+    _ => exo_accounts(user, exo_routes, input_mint, output_mint)?,
   };
   let args = RouteV2 {
     token_a: input_mint,
