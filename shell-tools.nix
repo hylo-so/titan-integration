@@ -1,4 +1,4 @@
-{ writeShellApplication }: {
+{ writeShellApplication, curl, git, jq, gnused }: {
   lint = writeShellApplication {
     name = "lint";
     text = ''
@@ -53,6 +53,53 @@
         set -euo pipefail
         make dump-programs
         make test-venue
+      "
+    '';
+  };
+
+  check-version = writeShellApplication {
+    name = "check-version";
+    runtimeInputs = [ git gnused ];
+    text = ''
+      manifest_version() {
+        sed -n 's/^version = "\(.*\)"$/\1/p' | head -1
+      }
+
+      git fetch --quiet origin main
+      current=$(manifest_version < Cargo.toml)
+      base=$(git show origin/main:Cargo.toml | manifest_version)
+      IFS=. read -r major minor patch <<< "$base"
+      expected_patch="$major.$minor.$((patch + 1))"
+      expected_minor="$major.$((minor + 1)).0"
+      expected_major="$((major + 1)).0.0"
+
+      case $current in
+        "$expected_patch" | "$expected_minor" | "$expected_major")
+          echo "Version $current is one bump above main ($base)." ;;
+        *)
+          echo "Version $current must be one patch, minor or major bump above main ($base):" >&2
+          echo "  $expected_patch, $expected_minor or $expected_major" >&2
+          exit 1 ;;
+      esac
+    '';
+  };
+
+  publish = writeShellApplication {
+    name = "publish";
+    runtimeInputs = [ curl jq gnused ];
+    text = ''
+      crate=$(sed -n 's/^name = "\(.*\)"$/\1/p' Cargo.toml | head -1)
+      local_version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)
+      published=$(curl -s -A hylo-titan-publish \
+        "https://crates.io/api/v1/crates/$crate" \
+        | jq -r '.crate.max_version')
+      if [ "$local_version" = "$published" ]; then
+        echo "$crate $local_version already on crates.io. Nothing to publish."
+        exit 0
+      fi
+      nix develop --command bash -c "
+        set -euo pipefail
+        cargo publish --package $crate
       "
     '';
   };
