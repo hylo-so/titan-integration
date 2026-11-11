@@ -2,6 +2,12 @@
 members = ["programs/*"]
 resolver = "2"
 
+[patch.crates-io]
+hylo-clients = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-core = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-idl = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-quotes = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

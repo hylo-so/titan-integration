@@ -64,6 +64,12 @@ hylo-core = { version = "2.7.3", features = ["offchain"] }
 hylo-idl = "2.7.3"
 hylo-quotes = "2.7.3"
 
+[patch.crates-io]
+hylo-clients = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-core = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-idl = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+hylo-quotes = { git = "https://github.com/hylo-so/sdk", rev = "eff9ae579ad9a2697d0dcd6fd6dcbc00aa5d5744" }
+
 # Used only for the construction allocation check. Normal tests, including
 # `quoting_speed`, run under true `--release`.
 [profile.release-debug]
