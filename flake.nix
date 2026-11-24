@@ -34,7 +34,9 @@
           };
 
           shellTools =
-            import ./shell-tools.nix { inherit writeShellApplication; };
+            import ./shell-tools.nix {
+              inherit writeShellApplication curl git jq gnused;
+            };
 
         in {
           devShells.default = mkShell {
